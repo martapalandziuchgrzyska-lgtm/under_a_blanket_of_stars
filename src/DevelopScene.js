@@ -1,7 +1,7 @@
 // Wywoływanie zdjęć: minigierka zależy od typu obiektu.
 import Phaser from '../lib/phaser.esm.min.js';
 import { OBJ, TYPES } from './data.js';
-import { S, ost, develop } from './state.js';
+import { S, ost, develop, devBlockDone } from './state.js';
 import { W, H, setupCam, txt, button, slider } from './ui.js';
 
 const ADD = Phaser.BlendModes.ADD;
@@ -9,7 +9,7 @@ const CX = W / 2, CY = 220, SC = 4; // kadr 192x192
 
 export class DevelopScene extends Phaser.Scene {
   constructor() { super('Develop'); }
-  init(d) { this.id = d.id; }
+  init(d) { this.id = d.id; this.block = !!d.block; this.finished = false; }
 
   create() {
     setupCam(this);
@@ -17,12 +17,13 @@ export class DevelopScene extends Phaser.Scene {
     this.extra = Math.max(0, Math.min(2, st.p - o.b));
     this.tol = 0.07 * (1 + 0.5 * this.extra);
     this.add.rectangle(CX, H / 2, W, H, 0x0b1026);
-    txt(this, CX, 26, 'Wywoływanie', { size: 11, ox: 0.5, color: '#aab4d0' });
+    txt(this, CX, 20, 'Wywoływanie', { size: 11, ox: 0.5, color: '#aab4d0' });
     txt(this, CX, 44, o.name, { size: 14, ox: 0.5, color: '#ffc65a', style: 'bold', wrap: 330, align: 'center' });
     this.add.rectangle(CX, CY, 200, 200, 0x05060f).setStrokeStyle(2, 0x4a3238);
     this.hint = txt(this, CX, CY + 118, '', { size: 11, ox: 0.5, color: '#d8dcf0', align: 'center', wrap: 330 });
     if (this.extra) txt(this, CX, 78, `dodatkowy materiał +${this.extra}: łatwiej`, { size: 10, ox: 0.5, color: '#8fe8a8' });
     this.done = button(this, CX, H - 40, 180, 40, 'Gotowe', () => this.finish(), { fill: 0x8a3a56, stroke: 0xe88a9a, size: 15 });
+    this.back = button(this, 44, 26, 72, 26, '‹ Wróć', () => this.scene.start('Night'), { size: 11 });
     this.err = () => 1;
     this[TYPES[o.type].game]();
   }
@@ -125,6 +126,8 @@ export class DevelopScene extends Phaser.Scene {
     this.finished = true;
     const stars = e <= this.tol ? 3 : e <= this.tol * 2.6 ? 2 : 1;
     develop(this.id, stars);
+    if (this.block) devBlockDone();
+    this.back.c.destroy();
     const st = ost(this.id);
     this.done.c.destroy();
     this.add.rectangle(CX, H / 2, W, H, 0x0b1026, 0.93);

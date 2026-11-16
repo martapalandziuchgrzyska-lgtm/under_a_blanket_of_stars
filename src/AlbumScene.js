@@ -12,6 +12,7 @@ export class AlbumScene extends Phaser.Scene {
 
   create() {
     setupCam(this);
+    this._toasts = [];
     this.add.rectangle(W / 2, H / 2, W, H, 0x2e2028);
     this.add.rectangle(W / 2, H / 2 + 14, W - 12, H - 76, 0xf6ead0).setStrokeStyle(2, 0x8a6450);
     for (let y = 80; y < H - 40; y += 34) this.add.circle(14, y, 3, 0x2e2028);

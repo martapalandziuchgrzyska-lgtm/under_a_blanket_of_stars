@@ -106,6 +106,14 @@ export function runBlock() {
   save();
   return r;
 }
+// Blok spędzony na wywoływaniu zdjęcia (pogoda nie ma znaczenia) liczy się jako udany.
+export function devBlockDone() {
+  const c = S.cur;
+  if (!c || c.done) return;
+  c.res[c.b] = 'ok'; c.b++;
+  if (c.b >= c.avail) c.done = true;
+  save();
+}
 export function perfectNight() { return S.cur.avail === BLOCKS && S.cur.res.every(x => x === 'ok'); }
 export function endNight() { S.night++; S.cur = null; save(); }
 

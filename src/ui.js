@@ -58,9 +58,15 @@ export function dialog(scene, title, body, buttons, o = {}) {
 }
 
 export function toast(scene, str, y = 300) {
+  // kolejne komunikaty układają się jeden pod drugim, zamiast na siebie nachodzić
+  const live = (scene._toasts ||= []);
+  if (live.length) y = Math.max(y, live[live.length - 1] + 6);
   const t = txt(scene, W / 2, y, str, { size: 12, ox: 0.5, oy: 0.5, color: '#ffe9a8', align: 'center', wrap: 300 }).setDepth(500);
-  const bg = scene.add.rectangle(W / 2, y, t.width + 20, t.height + 12, 0x070a18, 0.85).setStrokeStyle(1, 0xffc65a, 0.8).setDepth(499);
-  scene.tweens.add({ targets: [t, bg], alpha: 0, y: y - 24, delay: 2200, duration: 600, onComplete: () => { t.destroy(); bg.destroy(); } });
+  y += t.height / 2 + 6; t.setY(y);
+  const bottom = y + t.height / 2 + 6;
+  live.push(bottom);
+  const bg = scene.add.rectangle(W / 2, y, t.width + 20, t.height + 12, 0x070a18, 0.88).setStrokeStyle(1, 0xffc65a, 0.8).setDepth(499);
+  scene.tweens.add({ targets: [t, bg], alpha: 0, delay: 2600, duration: 600, onComplete: () => { t.destroy(); bg.destroy(); live.splice(live.indexOf(bottom), 1); } });
 }
 
 // Suwak: zwraca obiekt z polem v (0..1)

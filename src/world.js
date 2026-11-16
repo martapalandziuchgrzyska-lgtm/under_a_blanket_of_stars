@@ -1,11 +1,15 @@
 // Taras, domy i niebo. Wszystko siedzi w kontenerze o skali 2 (współrzędne grafiki 180x236).
 import Phaser from '../lib/phaser.esm.min.js';
-import { NEIGHBORS, HOUSES, EVENTS } from './data.js';
-import { S, darkness, lightsOff, nightNo, season, guests, eventTonight, eclipseNow, isFullMoon } from './state.js';
+import { NEIGHBORS, HOUSES, OBJ, seasonObjects } from './data.js';
+import { S, darkness, lightsOff, nightNo, season, guests, eventTonight, eclipseNow, blocked } from './state.js';
 import { rng } from './art.js';
 
 const ADD = Phaser.BlendModes.ADD;
-export const skyPos = id => { const r = rng('pos' + id); return { x: 26 + r() * 128, y: 22 + r() * 66 }; };
+// Stałe miejsce obiektu na niebie: siatka 5x2 na porę roku z lekkim rozrzutem.
+export const skyPos = id => {
+  const r = rng('pos' + id), i = seasonObjects(OBJ[id].s).findIndex(o => o.id === id);
+  return { x: 22 + (i % 5) * 34 + (r() - 0.5) * 12, y: 36 + Math.floor(i / 5) * 30 + (i % 2) * 8 + (r() - 0.5) * 8 };
+};
 
 export class World {
   constructor(scene, handlers = {}) {
@@ -17,19 +21,27 @@ export class World {
     const glow = (x, y, sc, col, a, into = c) => { const g = scene.add.image(x, y, 'glow').setScale(sc).setTint(col).setAlpha(a).setBlendMode(ADD); into.add(g); return g; };
     // warstwa kafelkowa do paralaksy: v = dryf (px/s), k = wychylenie za palcem (px)
     this.layers = [];
-    const tile = (y, h, key, v, k) => { const t = scene.add.tileSprite(0, y, 360, h, key).setOrigin(0).setScale(0.5); c.add(t); this.layers.push({ t, v, k }); return t; };
+    // ky = wychylenie w pionie: gwiazdy zawijają kafelek (px), reszta przesuwa całą warstwę (jednostki)
+    const tile = (y, h, key, v, k, ky, wrapY) => { const t = scene.add.tileSprite(0, y, 360, h, key).setOrigin(0).setScale(0.5); c.add(t); this.layers.push({ t, v, k, ky, wrapY, y0: y }); return t; };
 
     img(0, 0, 'sky');
-    this.milky = tile(0, 300, 'milky', 1.2, 3);
-    this.st = [tile(0, 300, 'stars1', 2.4, 5), tile(0, 300, 'stars2', 1.7, 3.5), tile(0, 300, 'stars3', 1.1, 2)];
+    this.milky = tile(0, 300, 'milky', 1.2, 3, 4, true);
+    this.st = [tile(0, 300, 'stars1', 2.4, 5, 7, true), tile(0, 300, 'stars2', 1.7, 3.5, 5, true), tile(0, 300, 'stars3', 1.1, 2, 3, true)];
     scene.tweens.add({ targets: this.st[0], alpha: 0.7, duration: 1700, yoyo: true, repeat: -1 });
-    this.moon = img(140, 30, 'moonph3');
-    this.comet = img(46, 34, 'comet_sky').setVisible(false).setOrigin(0.12, 0.75);
-    this.target = scene.add.image(0, 0, 'obj_moon').setScale(0.5).setVisible(false); c.add(this.target);
-    this.targetRing = scene.add.rectangle(0, 0, 28, 28).setStrokeStyle(1, 0xffc65a, 0.7).setVisible(false); c.add(this.targetRing);
-    tile(40, 150, 'pclouds', 4, 9);
-    tile(70, 160, 'city', 0, 12);
-    this.cityw = tile(70, 160, 'cityw', 0, 12);
+    // obiekty sezonu wiszą na niebie od początku nocy; jasność zależy od tego, czy da się je teraz zbierać
+    const objs = this.objs = scene.add.container(0, 0); c.add(objs);
+    this.moon = img(154, 84, 'moonph3', objs);
+    this.comet = img(46, 34, 'comet_sky', objs).setVisible(false).setOrigin(0.12, 0.75);
+    this.sky = {};
+    for (const o of seasonObjects(season())) {
+      const p = skyPos(o.id), im = scene.add.image(p.x, p.y, 'obj_' + o.id).setScale(0.42).setInteractive();
+      im.on('pointerdown', () => this.h.pick && this.h.pick(o.id));
+      objs.add(im); this.sky[o.id] = im;
+    }
+    this.targetRing = scene.add.rectangle(0, 0, 26, 26).setStrokeStyle(1, 0xffc65a, 0.8).setVisible(false); objs.add(this.targetRing);
+    tile(40, 150, 'pclouds', 4, 9, 2.5);
+    tile(70, 160, 'city', 0, 12, 1.2);
+    this.cityw = tile(70, 160, 'cityw', 0, 12, 1.2);
     this.poll = img(0, 0, 'pollution');
     this.clouds = [];
     for (let i = 0; i < 6; i++) this.clouds.push(img(-80, 10 + i * 17, 'cloud').setAlpha(0));
@@ -78,15 +90,20 @@ export class World {
     zone(24, 196, 36, 26, () => this.h.dog && this.h.dog());
     zone(84, 190, 22, 26, () => this.h.tea && this.h.tea());
     // paralaksa: warstwy dryfują powoli i lekko wychylają się za palcem
-    let t = 0, off = 0, moved = false;
+    let t = 0, off = 0, offY = 0, moved = false;
     scene.input.on('pointermove', () => { moved = true; });
     scene.input.on('pointerdown', () => { moved = true; });
     const upd = (time, dt) => {
       t += dt / 1000;
-      const want = moved ? Phaser.Math.Clamp((scene.input.activePointer.worldX / 360 - 0.5) * 2, -1, 1) : 0;
-      off += (want - off) * Math.min(1, dt / 500);
-      for (const l of this.layers) l.t.tilePositionX = t * l.v + off * l.k;
-      this.hg.x = -off * 4;
+      const ptr = scene.input.activePointer, e = Math.min(1, dt / 500);
+      off += ((moved ? Phaser.Math.Clamp((ptr.worldX / 360 - 0.5) * 2, -1, 1) : 0) - off) * e;
+      offY += ((moved ? Phaser.Math.Clamp((ptr.worldY / 472 - 0.5) * 2, -1, 1) : 0) - offY) * e;
+      for (const l of this.layers) {
+        l.t.tilePositionX = t * l.v + off * l.k;
+        if (l.wrapY) l.t.tilePositionY = offY * l.ky; else l.t.y = l.y0 - offY * l.ky;
+      }
+      this.objs.setPosition(-off * 2.5, -offY * 3);
+      this.hg.setPosition(-off * 4, -offY * 0.8);
     };
     scene.events.on('update', upd);
     scene.events.once('shutdown', () => scene.events.off('update', upd));
@@ -106,6 +123,11 @@ export class World {
     this.garland.setTexture(S.lamps ? 'garland_on' : 'garland_off');
     this.lampGlow.setVisible(S.lamps);
     const ph = nightNo();
+    const bl = block ?? (S.cur ? S.cur.b : 0);
+    for (const id in this.sky) {
+      const gap = OBJ[id].lvl - d;
+      this.sky[id].setAlpha(gap > 0 ? Math.max(0.16, 0.44 - gap * 0.09) : blocked(id, bl) ? 0.28 : 1);
+    }
     this.moon.setTexture('moonph' + ph).setVisible(ph > 0 && ph < 6);
     this.moon.setTint(eclipseNow(block ?? (S.cur ? S.cur.b : 0)) ? 0xc8603a : 0xffffff);
     this.comet.setVisible(eventTonight('comet')).setScale(0.35 + raw * 0.13, 0.6 + raw * 0.07);
@@ -118,9 +140,9 @@ export class World {
   }
 
   setTarget(id, quiet) {
-    if (!id || id === 'rest') { this.target.setVisible(false); this.targetRing.setVisible(false); return; }
-    const p = id === 'comet' ? { x: 52, y: 44 } : id === 'eclipse' ? { x: 145.5, y: 35.5 } : skyPos(id);
-    this.target.setTexture('obj_' + id).setPosition(p.x, p.y).setVisible(id !== 'comet' && id !== 'eclipse').setAlpha(0.9);
+    if (id && id.startsWith('dev:')) id = null;
+    if (!id || id === 'rest') { this.targetRing.setVisible(false); return; }
+    const p = id === 'comet' ? { x: 52, y: 44 } : id === 'eclipse' ? { x: 159.5, y: 89.5 } : skyPos(id);
     this.targetRing.setPosition(p.x, p.y).setVisible(true);
     const ang = Math.atan2(p.y - 188, p.x - 111);
     if (this.tp !== id) {

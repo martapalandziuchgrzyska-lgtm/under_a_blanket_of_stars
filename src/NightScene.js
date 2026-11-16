@@ -1,6 +1,6 @@
 // Główna scena: taras nocą, plan 8 bloków, prognoza, liściki.
 import Phaser from '../lib/phaser.esm.min.js';
-import { OBJ, NB, NEIGHBORS, TYPES, SEASONS, seasonObjects, BLOCKS, NIGHTS_PER_SEASON } from './data.js';
+import { OBJ, OBJECTS, NB, NEIGHBORS, TYPES, SEASONS, seasonObjects, BLOCKS, NIGHTS_PER_SEASON } from './data.js';
 import {
   S, save, startNight, season, nightNo, year, ost, darkness, lightsOff, shownForecast, blocked, maxP, runBlock, perfectNight, endNight,
   deliverMail, canSend, sendPhoto, feat, eventTonight, eclipseNow, isFullMoon, unpasted,
@@ -23,10 +23,11 @@ export class NightScene extends Phaser.Scene {
 
   create() {
     setupCam(this);
+    this._toasts = [];
     if (unpasted().length) { this.scene.start('Album', { paste: unpasted()[0] }); return; }
     if (!S.cur) startNight();
-    this.busy = false;
-    this.world = new World(this, { lamps: () => this.toggleLamps(), jar: () => this.readMail(), dog: () => this.warm('dog'), tea: () => this.warm('tea') });
+    this.busy = false; this.iss = false;
+    this.world = new World(this, { pick: id => this.pickSky(id), lamps: () => this.toggleLamps(), jar: () => this.readMail(), dog: () => this.warm('dog'), tea: () => this.warm('tea') });
 
     this.hudL = txt(this, 8, 6, '', { size: 12, color: '#ffe9a8' });
     this.hudR = txt(this, W - 8, 6, '', { size: 11, ox: 1, color: '#aab4d0', align: 'right' });
@@ -63,7 +64,7 @@ export class NightScene extends Phaser.Scene {
 
   intro() {
     dialog(this, 'Under a Blanket of Stars', 'Nowy dom, nowa okolica, nikogo znajomego. Za to jest taras z desek, girlanda lampek, teleskop, kot i pies.\n\nZawijasz się w koc jak w kokon i patrzysz w górę.', [{
-      label: 'Dalej', cb: () => dialog(this, 'Jak grać', 'Noc ma 8 bloków. Stuknij blok i wybierz, na co patrzy teleskop. Ikonki nad blokami to prognoza: dwa najbliższe bloki są już pewne, dalsze to zgadywanka.\n\nNic nie przepada. Zebrane światło zostaje na kolejne noce, a plan możesz zmieniać, kiedy chcesz.', [{ label: 'Zaczynam', cb: () => { S.intro = true; S.banner = S.night; save(); this.afterBanner(); } }]),
+      label: 'Dalej', cb: () => dialog(this, 'Jak grać', 'Noc ma 8 bloków. Stuknij blok i wybierz, na co patrzy teleskop. Ikonki nad blokami to prognoza: dwa najbliższe bloki są już pewne, dalsze to zgadywanka.\n\nGotowy kadr wywołujesz w osobnym bloku, najlepiej gdy są chmury.\n\nNic nie przepada. Zebrane światło zostaje na kolejne noce, a plan możesz zmieniać, kiedy chcesz.', [{ label: 'Zaczynam', cb: () => { S.intro = true; S.banner = S.night; save(); this.afterBanner(); } }]),
     }]);
   }
   seasonBanner() {
@@ -83,6 +84,7 @@ export class NightScene extends Phaser.Scene {
       else if (S.night > 0) m = ['Cicha noc. Co dziś trafi do albumu?', 'Deski tarasu jeszcze ciepłe od dnia.', 'Gdzieś szczeka pies. Twój tylko strzyże uchem.'][S.night % 3];
       this.say(m);
     }
+    if (c.b > 0) this.mail();
     if (c.b === 2) this.maybeISS();
   }
 
@@ -95,11 +97,11 @@ export class NightScene extends Phaser.Scene {
     const d = darkness(Math.min(c.b, BLOCKS - 1));
     this.hudR.setText(`ciemność ${'●'.repeat(Math.min(6, d))}${'○'.repeat(Math.max(0, 6 - d))}` + (S.lamps ? '\nlampki −1' : '') + (isFullMoon() && !eclipseNow(c.b) ? '\npełnia −1' : ''));
     this.slots.forEach((s, i) => {
-      const past = i < c.b, cur = i === c.b && !c.done, locked = i >= c.avail, id = c.plan[i];
+      const past = i < c.b, cur = i === c.b && !c.done, locked = i >= c.avail, id = c.plan[i], dev = !!id && id.startsWith('dev:'), oid = dev ? id.slice(4) : id;
       s.fore.setTexture('w_' + (past ? { clear: 'clear', thin: 'maybe', cloud: 'likely' }[c.act[i]] : shownForecast(i))).setAlpha(locked ? 0.15 : past ? 0.35 : i <= c.b + 1 ? 1 : 0.6);
       s.r.setFillStyle(locked ? 0x0b1026 : past ? 0x0e1430 : 0x121a3a).setStrokeStyle(cur ? 2 : 1, cur ? 0xffc65a : 0x2a3a6e);
-      s.icon.setTexture(id ? 'obj_' + id : 'ic_tea').setScale(id ? 0.75 : 2).setAlpha(locked ? 0 : past ? 0.4 : id ? 1 : 0.35);
-      s.lab.setText(locked ? 'zimno' : id && OBJ[id] ? `${Math.min(ost(id).p, OBJ[id].b)}/${OBJ[id].b}` : '');
+      s.icon.setTexture(id ? 'obj_' + oid : 'ic_tea').setScale(id ? 0.75 : 2).setAlpha(locked ? 0 : past ? 0.4 : id ? 1 : 0.35);
+      s.lab.setText(locked ? 'zimno' : dev ? 'wywołaj' : id && OBJ[id] ? `${Math.min(ost(id).p, OBJ[id].b)}/${OBJ[id].b}` : '');
       s.mark.setText(past ? (c.res[i] === 'ok' ? '✓' : c.res[i] === 'cloud' ? '☁' : '') : '').setColor(c.res[i] === 'ok' ? '#8fe8a8' : '#aab4d0');
     });
     this.bGo.setLabel(c.done ? 'Dobranoc' : `Zacznij blok ${c.b + 1}`);
@@ -121,6 +123,7 @@ export class NightScene extends Phaser.Scene {
     ov.add(txt(this, W / 2, 20, `Blok ${i + 1} · prognoza: ${FORE_NAME[shownForecast(i)]}`, { size: 13, ox: 0.5, color: '#ffc65a', style: 'bold' }));
     ov.add(txt(this, W / 2, 40, `ciemność nieba w tym bloku: ${darkness(i)}`, { size: 10, ox: 0.5, color: '#aab4d0' }));
     const rows = [];
+    for (const o of OBJECTS) if (ost(o.id).p >= o.b) rows.push({ id: 'dev:' + o.id, tex: o.id, name: 'Wywołaj: ' + o.short, sub: 'zajmuje blok · chmury nie przeszkadzają', ok: true });
     if (eventTonight('comet')) rows.push({ id: 'comet', name: 'Kometa', sub: 'jedyna taka noc', ok: true });
     if (eclipseNow(i)) rows.push({ id: 'eclipse', name: 'Zaćmienie Księżyca', sub: 'Księżyc w cieniu Ziemi', ok: true });
     for (const o of seasonObjects(season())) {
@@ -133,26 +136,37 @@ export class NightScene extends Phaser.Scene {
     rows.forEach((row, k) => {
       const y = 62 + k * rh + rh / 2, sel = c.plan[i] === row.id;
       const bg = this.add.rectangle(W / 2, y, W - 16, rh - 3, sel ? 0x2a3a6e : 0x121a3a).setStrokeStyle(1, sel ? 0xffc65a : 0x2a3a6e).setInteractive();
-      const ic = this.add.image(28, y, row.id ? 'obj_' + row.id : 'ic_tea').setScale(row.id ? Math.min(0.75, (rh - 6) / 48) : 2).setAlpha(row.ok ? 1 : 0.35);
+      const ic = this.add.image(28, y, row.id ? 'obj_' + (row.tex || row.id) : 'ic_tea').setScale(row.id ? Math.min(0.75, (rh - 6) / 48) : 2).setAlpha(row.ok ? 1 : 0.35);
       const nm = txt(this, 52, y - 8, row.name, { size: 12, oy: 0.5, color: row.ok ? '#f6ead0' : '#6a7498' });
       const sb = txt(this, 52, y + 8, row.sub, { size: 9, oy: 0.5, color: row.ok ? '#aab4d0' : '#b8707a' });
       ov.add([bg, ic, nm, sb]);
       if (row.o) {
         const p = row.st.p, need = row.o.b;
         ov.add(txt(this, W - 16, y - 8, '■'.repeat(Math.min(p, need)) + '□'.repeat(Math.max(0, need - p)) + (p > need ? ' +' + (p - need) : ''), { size: 11, ox: 1, oy: 0.5, color: p >= need ? '#8fe8a8' : '#ffc65a' }));
-        if (p >= need) ov.add(button(this, W - 50, y + 8, 76, 16, 'wywołaj', () => { ov.destroy(); this.scene.start('Develop', { id: row.id }); }, { size: 10, fill: 0x8a3a56, stroke: 0xe88a9a }).c);
       }
-      bg.on('pointerdown', () => {
-        if (!row.ok) return;
-        c.plan[i] = row.id;
-        if (row.o) { // wypełnij kolejne wolne bloki, ile jeszcze trzeba
-          let need = Math.max(1, row.o.b - row.st.p) - 1;
-          for (let j = i + 1; j < c.avail && need > 0; j++) { if (c.plan[j] || blocked(row.id, j)) break; c.plan[j] = row.id; need--; }
-        }
-        save(); close();
-      });
+      bg.on('pointerdown', () => { if (!row.ok) return; this.assign(i, row.id); close(); });
     });
     ov.add(button(this, W / 2, H - 24, 140, 30, 'Zamknij', close).c);
+  }
+
+  // Wpisuje cel do planu; dla obiektu wypełnia też kolejne wolne bloki, ile jeszcze trzeba.
+  assign(i, id) {
+    const c = S.cur, o = OBJ[id];
+    c.plan[i] = id;
+    if (o) {
+      let need = Math.max(1, o.b - ost(id).p) - 1;
+      for (let j = i + 1; j < c.avail && need > 0; j++) { if (c.plan[j] || blocked(id, j)) break; c.plan[j] = id; need--; }
+    }
+    save();
+  }
+  // Stuknięcie obiektu na niebie: ustawia go jako cel bieżącego bloku.
+  pickSky(id) {
+    const c = S.cur, o = OBJ[id];
+    if (this.busy || c.done) return;
+    const why = blocked(id, c.b);
+    if (why) return this.say(`${o.name}: ${why}.`);
+    this.assign(c.b, id); this.render(); this.world.setTarget(id);
+    this.say(`Teleskop patrzy na: ${o.name}.\n${o.note}`);
   }
 
   // ---------- blok
@@ -160,6 +174,12 @@ export class NightScene extends Phaser.Scene {
     if (this.busy) return;
     const c = S.cur;
     if (c.done) return this.nightEnd(true);
+    const pid = c.plan[c.b];
+    if (pid && pid.startsWith('dev:')) { // blok w ciemni: minigierka, pogoda bez znaczenia
+      const oid = pid.slice(4);
+      if (ost(oid).p >= OBJ[oid].b) return this.scene.start('Develop', { id: oid, block: true });
+      c.plan[c.b] = null;
+    }
     this.busy = true;
     const b = c.b;
     this.world.setTarget(c.plan[b]);
@@ -181,7 +201,7 @@ export class NightScene extends Phaser.Scene {
       this.mail();
       if (c.b === 2) this.maybeISS();
       if (r.kind === 'event' && r.id === 'comet') return this.finale();
-      if (r.kind === 'ok' && r.ready && (ost(r.id).p === o.b || ost(r.id).p === maxP(r.id))) return this.readyPrompt(r.id);
+      if (r.kind === 'ok' && r.ready) toast(this, `Kadr gotowy: ${o.short}.\nDodaj blok „Wywołaj”, najlepiej na chmury.`, 200);
       if (c.done) this.nightEnd();
     });
   }
@@ -190,11 +210,6 @@ export class NightScene extends Phaser.Scene {
     if (c.mail) return;
     if (c.b >= this.mailAt()) { const n = deliverMail(); this.world.catBack(() => { if (n) { toast(this, 'Kot wrócił z liścikiem. Zajrzyj do słoika na płocie.', 200); } this.render(); }); }
     else if (c.b === this.mailAt() - 1) this.world.catGo();
-  }
-  readyPrompt(id) {
-    const o = OBJ[id], full = ost(id).p >= maxP(id);
-    dialog(this, 'Kadr gotowy: ' + o.short, full ? 'Więcej światła już się nie zmieści. Czas wywołać zdjęcie.' : 'Masz dość światła, żeby wywołać zdjęcie. Dodatkowe bloki (do 2) ułatwią wywoływanie.',
-      [{ label: 'Wywołaj', cb: () => this.scene.start('Develop', { id }) }, { label: full ? 'Później' : 'Zbieraj dalej', cb: () => { if (S.cur.done) this.nightEnd(); } }]);
   }
   nightEnd(force) {
     const c = S.cur;

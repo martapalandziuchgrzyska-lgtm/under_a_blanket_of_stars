@@ -155,7 +155,7 @@ export class NightScene extends Phaser.Scene {
     if (S.inbox.length) rows.push({ id: 'read', icon: 'jar1', is: 1.3, name: 'Przeczytaj liściki', sub: `w słoiku: ${S.inbox.length} · chmury nie przeszkadzają`, ok: true });
     const ready = NEIGHBORS.filter(n => canSend(n.id));
     if (ready.length) rows.push({ id: 'send', icon: 'cat0', is: 1.1, name: 'Wyślij zdjęcia kotem', sub: 'dla: ' + ready.map(n => n.name).join(', '), ok: true });
-    for (const g of guests()) if (canTalk(g)) rows.push({ id: 'talk:' + g, icon: 'guy_' + g, is: 0.9, name: 'Porozmawiaj: ' + NB[g].name, sub: 'gość na tarasie', ok: true });
+    for (const g of guests()) if (canTalk(g)) rows.push({ id: 'talk:' + g, icon: 'guy_' + g, is: 0.9, name: 'Porozmawiaj: ' + NB[g].name, sub: 'przyszli na kometę', ok: true });
     if (canWrite()) rows.push({ id: 'write', icon: 'ic_pen', name: 'Napisz liścik do sąsiada', sub: 'kot zaniesie i od razu wróci z odpowiedzią', ok: true });
     if (!c.extra) rows.push({ id: 'tea', icon: 'ic_tea', name: 'Zaparz herbatę', sub: 'następne zbieranie światła: +1 · chmury nie przeszkadzają', ok: true });
     if (!c.calib) rows.push({ id: 'calib', icon: 'tube', is: 0.8, name: 'Wyczyść i skalibruj teleskop', sub: 'następne udane zbieranie: podwójnie · w sam raz na chmury', ok: true });
@@ -394,7 +394,7 @@ export class NightScene extends Phaser.Scene {
         ov.add(txt(this, 92, y + 17, OBJ[st.req].short, { size: 12 }));
         if (canSend(n.id)) ov.add(button(this, W - 62, y + 20, 92, 28, 'Zaplanuj wysyłkę', () => { ov.destroy(); if (!S.cur.done) { this.assign(S.cur.b, 'send'); this.say('Tę godzinę kot spędzi na roznoszeniu zdjęć. Stuknij „Zacznij godzinę”.'); } this.render(); }, { size: 10, fill: 0x8a3a56, stroke: 0xe88a9a }).c);
         else ov.add(txt(this, W - 18, y + 20, 'jeszcze nie\nw albumie', { size: 9, ox: 1, oy: 0.5, align: 'right', color: '#6a7498' }));
-      } else ov.add(txt(this, 58, y + 12, 'Wpada na taras co drugą noc. Kot przyniesie kolejny liścik.', { size: 10, color: '#6a7498', wrap: 280 }));
+      } else ov.add(txt(this, 58, y + 12, 'Kot przyniesie kolejny liścik.', { size: 10, color: '#6a7498', wrap: 280 }));
     });
     ov.add(button(this, W / 2, H - 24, 140, 30, 'Zamknij', close).c);
   }
@@ -412,7 +412,7 @@ export class NightScene extends Phaser.Scene {
   meteorNight() {
     const gem = eventTonight('geminids'), c = S.cur;
     this.world.setTarget(null);
-    dialog(this, gem ? 'Geminidy' : 'Perseidy', gem ? 'Dziś teleskop zostaje pod pokrowcem. Leżysz z psem pod kocem i liczysz spadające gwiazdy.\n\nStukaj w każdą, którą zobaczysz.' : 'Noc spadających gwiazd. Sąsiedzi przyszli na taras z leżakami.\n\nStukaj w każdą gwiazdę, którą zobaczycie.', [{
+    dialog(this, gem ? 'Geminidy' : 'Perseidy', gem ? 'Dziś teleskop zostaje pod pokrowcem. Leżysz z psem pod kocem i liczysz spadające gwiazdy.\n\nStukaj w każdą, którą zobaczysz.' : 'Noc spadających gwiazd. W oknach naprzeciwko też ktoś patrzy w górę.\n\nStukaj w każdą gwiazdę, którą zobaczysz.', [{
       label: 'Patrzę w górę', cb: () => {
         this.busy = true; let count = 0, left = 30;
         const cover = this.add.rectangle(W / 2, (PY + H) / 2 + 2, W, H - PY, 0x0b1026).setDepth(60).setInteractive();

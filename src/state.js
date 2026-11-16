@@ -234,10 +234,9 @@ export function sendPhoto(nid) {
   save();
   return ev;
 }
-// Kto dziś siedzi na tarasie: w noce Perseidów i komety wszyscy znajomi, poza tym każdy znajomy co drugą noc
+// Sąsiedzi nie odwiedzają tarasu w ciągu roku (kontakt to kot, liściki i zdjęcia). Przychodzą wszyscy dopiero na kometę.
 export function guests() {
-  const party = eventTonight('perseids') || eventTonight('comet');
-  return NEIGHBORS.filter((n, i) => (S.nb[n.id].met && (party || (S.night + i) % 2 === 0))).map(n => n.id);
+  return eventTonight('comet') ? NEIGHBORS.filter(n => S.nb[n.id].met).map(n => n.id) : [];
 }
 
 // ---------- bloki bez teleskopu: poczta, wysyłka zdjęć, rozmowa z gościem

@@ -8,19 +8,20 @@ export function hasSave() { try { return !!localStorage.getItem(KEY); } catch { 
 export function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* tryb prywatny */ } }
 export function load() {
   try { S = JSON.parse(localStorage.getItem(KEY)); } catch { S = null; }
-  if (!S || S.v !== 1) newGame();
+  if (!S || S.v !== 2) newGame();
   return S;
 }
 export function newGame() {
-  S = { v: 1, night: 0, obj: {}, nb: {}, lamps: true, feats: {}, gifts: [false, false, false, false], inbox: [], cur: null, intro: false, toasts: [] };
-  for (const n of NEIGHBORS) S.nb[n.id] = { met: false, rel: 0, req: null, off: false, asks: 0 };
+  S = { v: 2, night: 0, obj: {}, nb: {}, lamps: true, feats: {}, gifts: [false, false, false, false], inbox: [], cur: null, intro: false, toasts: [] };
+  for (const n of NEIGHBORS) S.nb[n.id] = { met: false, rel: 0, req: null, off: false, asks: 0, sent: [] };
   save();
 }
 
 export const season = () => Math.floor(S.night / NIGHTS_PER_SEASON) % 4;
 export const nightNo = () => S.night % NIGHTS_PER_SEASON;
 export const year = () => Math.floor(S.night / (NIGHTS_PER_SEASON * 4));
-export const ost = id => (S.obj[id] ??= { p: 0, streak: true, lastB: -99, album: null });
+// p: zebrane bloki światła (nie znikają po wywołaniu), found: czy obiekt jest namierzony (jasne widać od razu)
+export const ost = id => (S.obj[id] ??= { p: 0, streak: true, gold: false, lastB: -99, album: null, found: OBJ[id].lvl === 1 });
 export const lightsOff = () => NEIGHBORS.filter(n => S.nb[n.id].off).length;
 export const isFullMoon = () => nightNo() === FULL_MOON_NIGHT;
 export const eventTonight = id => { const e = EVENTS[id]; return e.s === season() && (e.nights ? e.nights.includes(nightNo()) : e.night === nightNo()); };
@@ -72,13 +73,18 @@ export const shownForecast = i => (i <= S.cur.b + 1 ? S.cur.fore[i] : S.cur.earl
 // Dlaczego obiektu nie da się teraz zbierać (null = można)
 export function blocked(id, b) {
   const o = OBJ[id];
+  if (!ost(id).found) return 'nieodkryty, przeskanuj niebo';
+  if (ost(id).p >= maxP(id)) return 'masz już komplet światła';
   if (o.win && (b + 1 < o.win[0] || b + 1 > o.win[1])) return b + 1 < o.win[0] ? `za dachem do bloku ${o.win[0]}` : 'już zaszedł';
   if (twilight(b) && o.lvl > 1) return 'za jasno (zmierzch)';
   if (o.noMoon && isFullMoon()) return 'pełnia go zagłusza';
   if (o.lvl > darkness(b)) return `za jasno (trzeba ciemności ${o.lvl})`;
   return null;
 }
-export const maxP = id => OBJ[id].b + 2;
+// Światło układa się w progi: b bloków = 1 gwiazdka, 2b = 2, 3b = 3 (komplet).
+export const maxP = id => OBJ[id].b * 3;
+export const tier = id => Math.min(3, Math.floor(ost(id).p / OBJ[id].b));
+export const canDevelop = id => tier(id) > (ost(id).album ? ost(id).album.stars : 0);
 
 // Rozstrzyga bieżący blok. Zwraca opis wyniku do pokazania.
 export function runBlock() {
@@ -95,9 +101,10 @@ export function runBlock() {
       if (st.p === 0) st.streak = true; else if (st.lastB !== gb - 1 || Math.floor(st.lastB / BLOCKS) !== S.night) st.streak = false;
       st.lastB = gb;
       st.p = Math.min(maxP(id), st.p + 1);
+      if (st.p === o.b) st.gold = st.streak && o.b > 1;
       const lucky = c.fore[b] === 'likely' && act === 'clear' && o.lvl > 1;
       if (lucky) feat('lucky');
-      r = { kind: 'ok', id, act, lucky, ready: st.p >= o.b };
+      r = { kind: 'ok', id, act, lucky, ready: st.p % o.b === 0 && canDevelop(id) };
     } else { r = { kind: 'cloud', id, act }; if (st.p > 0) st.streak = false; }
   }
   c.res[b] = r.kind === 'ok' || r.kind === 'event' ? 'ok' : r.kind === 'rest' ? 'rest' : 'cloud';
@@ -114,16 +121,23 @@ export function devBlockDone() {
   if (c.b >= c.avail) c.done = true;
   save();
 }
+// ---------- skanowanie nieba: namierzanie nieodkrytych obiektów
+export const scanCandidates = b => seasonObjects(season()).filter(o => !ost(o.id).found && o.lvl <= darkness(b));
+function closeBlock(res) { const c = S.cur; c.res[c.b] = res; c.b++; if (c.b >= c.avail) c.done = true; save(); }
+export function scanDone(id) { ost(id).found = true; if (S.cur && !S.cur.done) closeBlock('ok'); else save(); }
+export function scanClouded() { closeBlock('cloud'); }
 export function perfectNight() { return S.cur.avail === BLOCKS && S.cur.res.every(x => x === 'ok'); }
 export function endNight() { S.night++; S.cur = null; save(); }
 
 // ---------- liściki i prośby
+// Sąsiad nigdy nie prosi drugi raz o to samo. Najpierw o zdjęcia, których jeszcze nie masz.
 function chooseRequest(n) {
   const taken = NEIGHBORS.map(m => S.nb[m.id].req).filter(Boolean);
   const st = S.nb[n.id];
-  if (st.asks === 0 && n.first && OBJ[n.first].s === season() && !taken.includes(n.first)) return n.first;
+  const free = id => !taken.includes(id) && !st.sent.includes(id);
+  if (st.asks === 0 && n.first && OBJ[n.first].s === season() && free(n.first)) return n.first;
   const max = 1 + lightsOff();
-  const pool = seasonObjects(season()).filter(o => o.lvl <= max && !taken.includes(o.id));
+  const pool = seasonObjects(season()).filter(o => o.lvl <= max && free(o.id));
   const tiers = [o => n.likes.includes(o.type) && !ost(o.id).album, o => !ost(o.id).album, o => n.likes.includes(o.type), () => true];
   for (const t of tiers) { const c = pool.filter(t); if (c.length) return c[Math.floor(Math.random() * c.length)].id; }
   return null;
@@ -151,25 +165,25 @@ export function deliverMail() {
 export const canSend = nid => { const r = S.nb[nid].req; return !!(r && ost(r).album && ost(r).album.pasted); };
 export function sendPhoto(nid) {
   const st = S.nb[nid], n = NB[nid];
-  st.req = null; st.rel++;
+  st.sent.push(st.req); st.req = null; st.rel++;
   let ev = null;
-  if (st.rel === 3) { st.off = true; S.inbox.push({ from: nid, text: n.off }); ev = 'off'; }
-  else if (st.rel === 5) { S.inbox.push({ from: nid, text: n.guest }); ev = 'guest'; }
+  if (st.rel === 2) { st.off = true; S.inbox.push({ from: nid, text: n.off }); ev = 'off'; }
+  else if (st.rel === 4) { S.inbox.push({ from: nid, text: n.guest }); ev = 'guest'; }
   save();
   return ev;
 }
-export const guests = () => NEIGHBORS.filter(n => S.nb[n.id].rel >= 5).map(n => n.id);
+export const guests = () => NEIGHBORS.filter(n => S.nb[n.id].rel >= 4).map(n => n.id);
 
 // ---------- album
+// Wywołane zdjęcie: gwiazdki nie przekroczą progu zebranego światła. Lepsza odbitka sama podmienia naklejkę.
 export function develop(id, stars) {
-  const st = ost(id), gold = st.streak && OBJ[id].b > 1;
-  if (!st.album || stars > st.album.stars || (gold && !st.album.gold)) {
-    st.album = { stars: Math.max(stars, st.album ? st.album.stars : 0), gold: gold || !!(st.album && st.album.gold), pasted: !!(st.album && st.album.pasted) };
-  }
-  if (gold) feat('streak');
-  st.p = 0; st.streak = true; st.lastB = -99;
+  const st = ost(id), was = st.album;
+  stars = Math.max(1, Math.min(stars, tier(id)));
+  st.album = { stars: Math.max(stars, was ? was.stars : 0), gold: st.gold || !!(was && was.gold), pasted: !!(was && was.pasted) };
+  if (st.album.gold) feat('streak');
   if (S.cur) S.cur.got++;
   save();
+  return { stars, upgrade: !!(was && was.pasted) };
 }
 export function paste(id) {
   ost(id).album.pasted = true;

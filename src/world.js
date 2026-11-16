@@ -1,7 +1,7 @@
 // Taras, domy i niebo. Wszystko siedzi w kontenerze o skali 2 (współrzędne grafiki 180x236).
 import Phaser from '../lib/phaser.esm.min.js';
 import { NEIGHBORS, HOUSES, OBJ, seasonObjects } from './data.js';
-import { S, darkness, lightsOff, nightNo, season, guests, eventTonight, eclipseNow, blocked } from './state.js';
+import { S, darkness, lightsOff, nightNo, season, guests, eventTonight, eclipseNow, blocked, ost } from './state.js';
 import { rng } from './art.js';
 
 const ADD = Phaser.BlendModes.ADD;
@@ -126,9 +126,12 @@ export class World {
     const bl = block ?? (S.cur ? S.cur.b : 0);
     for (const id in this.sky) {
       const gap = OBJ[id].lvl - d;
-      this.sky[id].setAlpha(gap > 0 ? Math.max(0.16, 0.44 - gap * 0.09) : blocked(id, bl) ? 0.28 : 1);
+      const im = this.sky[id];
+      if (!ost(id).found) { im.setTexture('smudge').setScale(0.5).setAlpha(gap > 0 ? 0.3 : 0.75); continue; } // coś tam majaczy
+      const why = blocked(id, bl);
+      im.setTexture('obj_' + id).setScale(0.42).setAlpha(gap > 0 ? Math.max(0.16, 0.44 - gap * 0.09) : why && !why.startsWith('masz') ? 0.28 : 1);
     }
-    this.moon.setTexture('moonph' + ph).setVisible(ph > 0 && ph < 6);
+    this.moon.setTexture('moonph' + ph).setVisible(ph > 0 && ph < 6 && !this.sky.moon); // jesienią Księżyc jest obiektem, nie tłem
     this.moon.setTint(eclipseNow(block ?? (S.cur ? S.cur.b : 0)) ? 0xc8603a : 0xffffff);
     this.comet.setVisible(eventTonight('comet')).setScale(0.35 + raw * 0.13, 0.6 + raw * 0.07);
     S.gifts.forEach((g, i) => this.gifts[i].setVisible(g)); this.giftGlow.setVisible(S.gifts[0]);
@@ -140,7 +143,7 @@ export class World {
   }
 
   setTarget(id, quiet) {
-    if (id && id.startsWith('dev:')) id = null;
+    if (id && (id.startsWith('dev:') || id === 'scan')) id = null;
     if (!id || id === 'rest') { this.targetRing.setVisible(false); return; }
     const p = id === 'comet' ? { x: 52, y: 44 } : id === 'eclipse' ? { x: 159.5, y: 89.5 } : skyPos(id);
     this.targetRing.setPosition(p.x, p.y).setVisible(true);

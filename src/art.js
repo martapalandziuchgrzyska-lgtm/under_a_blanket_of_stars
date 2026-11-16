@@ -335,16 +335,21 @@ export function buildWorld(scene) {
     R(c, W1, 6, 12, 52, 4); R(c, W3, 6, 12, 52, 1);
     for (let x = 14; x < 52; x += 8) { R(c, W1, x, 16, 4, 32); R(c, W2, x, 16, 1, 32); }
     R(c, W1, 2, 50, 60, 6); R(c, W2, 2, 50, 60, 2); R(c, W0, 2, 55, 60, 1); R(c, W0, 4, 56, 4, 14); R(c, W0, 56, 56, 4, 14);
+    // granatowy koc w gwiazdki
     const plaid = (x, y) => {
-      const sx = (x + 100) % 10 < 3, sy = (y + 100) % 10 < 3; let col = sx && sy ? [30, 32, 84] : sx || sy ? [96, 44, 96] : [172, 56, 68];
-      if ((x + 100) % 10 === 6 || (y + 100) % 10 === 6) col = [226, 150, 120];
-      const sh = (x - 30) / 24 + (y - 40) / 44, k = sh > 0.55 ? 0.62 : sh > 0.25 ? 0.82 : sh < -0.5 ? 1.15 : 1;
+      let col = [46, 60, 152];
+      const gx = Math.floor((x + 100) / 8), gy2 = Math.floor((y + 100) / 8), hsh = (gx * 73 + gy2 * 151 + gx * gy2 * 7) % 17;
+      const dx = Math.abs(x - (gx * 8 - 100 + 2 + hsh % 4)), dy = Math.abs(y - (gy2 * 8 - 100 + 2 + (hsh >> 1) % 4));
+      if (hsh % 3 === 0) { if (dx + dy === 0) col = [255, 246, 205]; else if (dx + dy === 1) col = [255, 205, 100]; }
+      else if (hsh % 3 === 1 && dx + dy === 0) col = [255, 226, 150];
+      else if (hsh % 7 === 2 && dx + dy === 0) col = [170, 195, 255];
+      const sh = (x - 30) / 24 + (y - 40) / 44, k = sh > 0.55 ? 0.6 : sh > 0.25 ? 0.8 : sh < -0.5 ? 1.18 : 1;
       return `rgb(${Math.min(255, col[0] * k) | 0},${Math.min(255, col[1] * k) | 0},${Math.min(255, col[2] * k) | 0})`;
     };
-    const blob = (cx, cy, rx, ry, skew = 0) => { for (let y = -ry; y <= ry; y++) for (let x = -rx; x <= rx; x++) { const d = (x * x) / (rx * rx) + (y * y) / (ry * ry); if (d <= 1) R(c, d > 0.86 ? '#4a1a30' : plaid(x + cx + Math.round(y * skew), y + cy), cx + x, cy + y); } };
+    const blob = (cx, cy, rx, ry, skew = 0) => { for (let y = -ry; y <= ry; y++) for (let x = -rx; x <= rx; x++) { const d = (x * x) / (rx * rx) + (y * y) / (ry * ry); if (d <= 1) R(c, d > 0.86 ? '#141a4c' : plaid(x + cx + Math.round(y * skew), y + cy), cx + x, cy + y); } };
     blob(32, 45, 22, 21, 0.15); blob(30, 20, 15, 15, -0.1);
-    for (let i = 0; i < 16; i++) { R(c, '#4a1a30', 14 + i, 36 + Math.round(Math.sin(i / 5) * 2)); R(c, '#4a1a30', 40 + i * 0.6, 34 + i); }
-    ell(c, '#3a1426', 30, 22, 10, 9); ell(c, '#f4d8bc', 30, 23, 8, 7);
+    for (let i = 0; i < 16; i++) { R(c, '#1a2262', 14 + i, 36 + Math.round(Math.sin(i / 5) * 2)); R(c, '#1a2262', 40 + i * 0.6, 34 + i); }
+    ell(c, '#f6ead0', 30, 22, 11, 10); ell(c, '#10143a', 30, 22, 10, 9); ell(c, '#f4d8bc', 30, 23, 8, 7);
     R(c, '#5a3428', 22, 16, 17, 4); R(c, '#5a3428', 22, 20, 3, 3); R(c, '#5a3428', 36, 20, 3, 2); R(c, '#7a4a38', 26, 16, 6, 1);
     R(c, INK, 26, 23, 2, 2); R(c, INK, 33, 23, 2, 2); R(c, '#ffffff', 26, 23); R(c, '#ffffff', 33, 23);
     R(c, '#e89a90', 24, 26, 2, 1); R(c, '#e89a90', 35, 26, 2, 1); R(c, '#b8606a', 29, 27, 3, 1);
@@ -425,6 +430,8 @@ export function buildWorld(scene) {
     dith(c, '#2a3160', 6, 22, 100, 10, 0.4);
   });
   mk(scene, 'mote', 2, 2, c => R(c, '#fff', 0, 0, 2, 2));
+  mk(scene, 'smudge', 24, 24, c => { const b = new Buf(24, 24); b.glow(12, 12, 6, 5, 0.5, [150, 165, 240], 0.75); putD(b, c, 4); R(c, 'rgba(230,235,255,0.8)', 12, 12); });
+  mk(scene, 'ic_scan', 12, 12, c => { for (let a = 0; a < 6.3; a += 0.2) R(c, PAL.warm1, 5.5 + Math.cos(a) * 4.5, 5.5 + Math.sin(a) * 4.5); R(c, PAL.warm0, 5, 3, 1, 5); R(c, PAL.warm0, 3, 5, 5, 1); R(c, PAL.white, 5, 5); });
   mk(scene, 'comet_sky', 140, 60, c => { const b = new Buf(140, 60); for (let s = 0; s < 120; s++) b.glow(16 + s, 44 - s * 0.3, 2 + s * 0.08, 2 + s * 0.08, 0, [170, 215, 255], 0.3 * (1 - s / 124)); b.glow(16, 44, 4, 4, 0, [235, 255, 248], 1.8); putD(b, c, 5); sparkle(c, 16, 44, 5); });
   for (let p = 0; p < 7; p++) mk(scene, 'moonph' + p, 22, 22, c => {
     if (p === 0 || p === 6) return;

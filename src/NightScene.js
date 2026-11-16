@@ -62,7 +62,7 @@ export class NightScene extends Phaser.Scene {
   mailAt() { return S.night === 0 ? 1 : 2; }
 
   intro() {
-    dialog(this, 'Pod kocem gwiazd', 'Nowy dom, nowa okolica, nikogo znajomego. Za to jest taras z desek, girlanda lampek, teleskop, kot i pies.\n\nZawijasz się w koc jak w kokon i patrzysz w górę.', [{
+    dialog(this, 'Under a Blanket of Stars', 'Nowy dom, nowa okolica, nikogo znajomego. Za to jest taras z desek, girlanda lampek, teleskop, kot i pies.\n\nZawijasz się w koc jak w kokon i patrzysz w górę.', [{
       label: 'Dalej', cb: () => dialog(this, 'Jak grać', 'Noc ma 8 bloków. Stuknij blok i wybierz, na co patrzy teleskop. Ikonki nad blokami to prognoza: dwa najbliższe bloki są już pewne, dalsze to zgadywanka.\n\nNic nie przepada. Zebrane światło zostaje na kolejne noce, a plan możesz zmieniać, kiedy chcesz.', [{ label: 'Zaczynam', cb: () => { S.intro = true; S.banner = S.night; save(); this.afterBanner(); } }]),
     }]);
   }

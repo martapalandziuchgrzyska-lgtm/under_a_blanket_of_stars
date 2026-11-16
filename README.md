@@ -1,4 +1,4 @@
-# Pod kocem gwiazd
+# Under a Blanket of Stars
 
 Cozy gra pixel-art o obserwowaniu nocnego nieba z tarasu. Phaser 4 (4.2.1), czysty JavaScript, bez kroku budowania.
 

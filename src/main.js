@@ -18,8 +18,8 @@ class TitleScene extends Phaser.Scene {
     new World(this);
     this.add.rectangle(W / 2, 556, W, 170, 0x0b1026);
     this.add.rectangle(W / 2, 472, W, 2, 0x4a3238);
-    txt(this, W / 2, 70, 'Pod kocem gwiazd', { size: 30, ox: 0.5, font: SERIF, style: 'italic', color: '#ffe9a8' });
-    txt(this, W / 2, 108, 'cozy gra o nocnym niebie', { size: 12, ox: 0.5, color: '#aab4d0' });
+    txt(this, W / 2, 44, 'Under a Blanket\nof Stars', { size: 30, ox: 0.5, font: SERIF, style: 'italic', color: '#ffe9a8', align: 'center', ls: 0 });
+    txt(this, W / 2, 122, 'cozy gra o nocnym niebie', { size: 12, ox: 0.5, color: '#aab4d0' });
     const started = had && (S.night > 0 || S.intro);
     button(this, W / 2, 520, 220, 44, started ? `Kontynuuj (${SEASONS[season()]}, noc ${nightNo() + 1})` : 'Wyjdź na taras', () => this.scene.start('Night'), { fill: 0x8a3a56, stroke: 0xe88a9a, size: 14 });
     if (started) button(this, W / 2, 576, 220, 32, 'Nowa gra', () => dialog(this, 'Nowa gra', 'Zacząć od nowa? Album i znajomości z sąsiadami przepadną.', [{ label: 'Od nowa', cb: () => { newGame(); this.scene.start('Night'); } }, { label: 'Anuluj' }]), { size: 12 });

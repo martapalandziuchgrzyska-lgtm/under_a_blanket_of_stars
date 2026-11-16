@@ -183,92 +183,258 @@ export function buildObjects(scene) {
 }
 
 // ---------- taras, domy, niebo
-export function buildWorld(scene) {
-  mk(scene, 'sky', 180, 160, c => {
-    const cols = [PAL.night0, '#0e1430', PAL.night1, '#162045', PAL.night2, '#22305e'];
-    for (let y = 0; y < 160; y++) { const f = y / 160 * (cols.length - 1), i = Math.floor(f); R(c, (f - i > ((y % 2) ? 0.35 : 0.65)) ? cols[Math.min(cols.length - 1, i + 1)] : cols[i], 0, y, 180, 1); }
-  });
-  mk(scene, 'pollution', 180, 160, c => { for (let y = 40; y < 160; y++) { const a = Math.floor(((y - 40) / 120) ** 1.6 * 8) / 8 * 0.75; R(c, `rgba(232,138,58,${a})`, 0, y, 180, 1); } });
-  const r = rng(42);
-  const stars = (key, n, amin, amax) => mk(scene, key, 180, 150, c => { for (let i = 0; i < n; i++) { const x = r() * 180 | 0, y = (r() ** 1.3) * 148 | 0, a = amin + r() * (amax - amin), col = STARC[Math.floor(r() * 4)]; R(c, `rgba(${col[0]},${col[1]},${col[2]},${a})`, x, y); } });
-  stars('stars1', 26, 0.8, 1); stars('stars2', 90, 0.45, 0.8); stars('stars3', 260, 0.2, 0.5);
-  mk(scene, 'milky', 180, 150, c => { const b = new Buf(180, 150), q = rng(5); for (let i = 0; i < 46; i++) { const s = i / 45; b.glow(40 + s * 110 + gauss(q) * 6, 140 - s * 150 + gauss(q) * 6, 12 + q() * 8, 7 + q() * 4, -0.9, [190, 200, 240], 0.07 + q() * 0.05); } for (let i = 0; i < 260; i++) { const s = q(); b.add(40 + s * 110 + gauss(q) * 16, 140 - s * 150 + gauss(q) * 12, WHITE, 0.3); } b.put(c); });
-  mk(scene, 'glow', 32, 32, c => { for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) { const d = Math.hypot(x - 15.5, y - 15.5) / 16, a = Math.floor(Math.max(0, 1 - d) ** 2 * 6) / 6; if (a > 0) R(c, `rgba(255,255,255,${a})`, x, y); } });
-  mk(scene, 'houses', 180, 64, c => {
-    const base = 62, q = rng(9);
-    for (const tx of [33, 67, 107, 138, 178]) { ell(c, '#0a1026', tx, base - 14, 5, 9); R(c, '#0a1026', tx, base - 8, 1, 8); }
-    for (const h of HOUSES) {
-      R(c, PAL.house, h.x, base - h.h, h.w, h.h);
-      for (let i = 0; i <= h.roof; i++) R(c, PAL.roof, h.x - 2 + i * (h.w / 2 + 2) / h.roof, base - h.h - i, Math.ceil((h.w + 4) * (1 - i / h.roof)) , 1);
-      R(c, PAL.roof, h.x + h.w - 8, base - h.h - h.roof + 2, 3, 6);
-      R(c, '#182048', h.x + h.w - 9, base - 9, 5, 9);
-      for (let i = 0; i < 3; i++) R(c, '#141b3c', h.x + 2 + q() * (h.w - 6), base - h.h + 3 + q() * (h.h - 8), 1, 1);
-    }
-    R(c, '#080c1e', 0, base, 180, 2);
-  });
-  mk(scene, 'terrace', 180, 92, c => {
-    // płot z tyłu (y 0-14), deski tarasu (y 14-92)
-    for (let x = 0; x < 180; x += 6) { R(c, PAL.wood0, x + 1, 2, 4, 12); R(c, PAL.wood1, x + 1, 2, 1, 12); }
-    R(c, PAL.wood1, 0, 4, 180, 2); R(c, PAL.wood2, 0, 4, 180, 1); R(c, PAL.wood1, 0, 11, 180, 1);
-    for (const px of [28, 88, 150]) { R(c, PAL.wood1, px, 0, 4, 14); R(c, PAL.wood2, px, 0, 4, 1); }
-    for (let y = 14; y < 92; y += 8) {
-      R(c, (y / 8) % 2 ? PAL.wood1 : '#523840', 0, y, 180, 8); R(c, PAL.wood0, 0, y + 7, 180, 1); R(c, '#5e4046', 0, y, 180, 1);
-      const off = (y * 7) % 50; for (let x = off; x < 180; x += 62) { R(c, PAL.wood0, x, y, 1, 7); R(c, PAL.wood2, x + 2, y + 3, 1, 1); R(c, PAL.wood2, x - 2, y + 3, 1, 1); }
-    }
-  });
-  const gy = x => 8 + 11 * (1 - ((x - 90) / 86) ** 2);
-  const garland = on => c => {
-    R(c, PAL.wood1, 3, 0, 2, 52); R(c, PAL.wood1, 175, 0, 2, 52);
-    for (let x = 4; x <= 176; x++) R(c, '#2a2238', x, gy(x));
-    const cols = [PAL.warm1, PAL.warm0, '#ffa07a', PAL.warm0];
-    for (let x = 12, i = 0; x < 172; x += 12, i++) { const y = Math.round(gy(x)) + 1; if (on) { R(c, 'rgba(255,198,90,0.25)', x - 2, y - 1, 5, 5); R(c, cols[i % 4], x - 1, y, 3, 3); R(c, PAL.white, x, y); } else R(c, '#4a4458', x - 1, y, 3, 3); }
-  };
-  mk(scene, 'garland_on', 180, 54, garland(true)); mk(scene, 'garland_off', 180, 54, garland(false));
+// Tekstury świata są rysowane w siatce 360 px szerokości (dwa razy gęściej niż jednostki sceny w world.js).
+const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+const bay = (x, y) => (BAYER[(x & 3) + ((y & 3) << 2)] + 0.5) / 16;
+function dith(c, col, x, y, w, h, den) { c.fillStyle = col; for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) if (bay(x + i, y + j) < den) c.fillRect(x + i, y + j, 1, 1); }
+// pionowy gradient z ditheringiem uporządkowanym
+function grad(c, w, h, cols, pow = 1) {
+  const img = c.createImageData(w, h), o = img.data, cc = cols.map(hex);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const f = Math.pow(y / (h - 1), pow) * (cc.length - 1), i = Math.min(cc.length - 2, Math.floor(f)), col = (f - i) > bay(x, y) ? cc[i + 1] : cc[i], k = (y * w + x) * 4;
+    o[k] = col[0]; o[k + 1] = col[1]; o[k + 2] = col[2]; o[k + 3] = 255;
+  }
+  c.putImageData(img, 0, 0);
+}
+// zrzut bufora świetlnego z ditheringiem alfy (miękkie chmury gwiazd)
+function putD(buf, ctx, lv = 4) {
+  const img = ctx.createImageData(buf.w, buf.h), d = buf.d, o = img.data;
+  for (let y = 0; y < buf.h; y++) for (let x = 0; x < buf.w; x++) {
+    const i = (y * buf.w + x) * 4, A = d[i + 3]; if (A <= 0.01) continue;
+    const q = Math.floor(Math.min(1, A) * lv + bay(x, y)) / lv; if (q <= 0) continue;
+    const k = 1 / Math.max(A, 0.001);
+    o[i] = Math.min(255, d[i] * k); o[i + 1] = Math.min(255, d[i + 1] * k); o[i + 2] = Math.min(255, d[i + 2] * k); o[i + 3] = q * 255;
+  }
+  ctx.putImageData(img, 0, 0);
+}
+function sparkle(c, x, y, n, col = '#ffffff') {
+  R(c, col, x, y); for (let i = 1; i <= n; i++) { const a = 1 - i / (n + 1); c.fillStyle = `rgba(220,228,255,${a})`; c.fillRect(x + i, y, 1, 1); c.fillRect(x - i, y, 1, 1); c.fillRect(x, y + i, 1, 1); c.fillRect(x, y - i, 1, 1); }
+  if (n > 2) { c.fillStyle = 'rgba(200,210,255,0.45)'; c.fillRect(x + 1, y + 1, 1, 1); c.fillRect(x - 1, y - 1, 1, 1); c.fillRect(x + 1, y - 1, 1, 1); c.fillRect(x - 1, y + 1, 1, 1); }
+}
+const W0 = '#2a1826', W1 = '#4a2c38', W2 = '#6e4240', W3 = '#96654c', W4 = '#c08a5a', INK = '#070818';
 
-  mk(scene, 'hero', 30, 34, c => {
-    // leżak
-    R(c, PAL.wood2, 3, 6, 2, 26); R(c, PAL.wood2, 24, 16, 2, 16); R(c, PAL.wood3, 3, 26, 24, 2); R(c, PAL.wood0, 5, 8, 2, 18);
-    // kokon z koca
-    ell(c, PAL.rose0, 15, 21, 10, 10); ell(c, PAL.rose1, 15, 20, 9, 9); ell(c, PAL.rose0, 13, 9, 7, 7); ell(c, PAL.rose1, 13, 9, 6, 6);
-    for (let y = 14; y < 30; y += 4) for (let x = 6; x < 25; x++) if ((x + y) % 7 < 4 && Math.hypot(x - 15, (y - 20)) < 9) R(c, PAL.rose2, x, y);
-    ell(c, PAL.rose2, 11, 6, 3, 1);
-    // buzia w kapturze
-    ell(c, PAL.cream, 14, 10, 4, 3); R(c, '#3a2a3a', 10, 7, 8, 2); R(c, PAL.ink, 12, 10); R(c, PAL.ink, 16, 10); R(c, '#e8a090', 11, 12); R(c, '#e8a090', 17, 12);
-    // rączki z kubkiem
-    R(c, PAL.cream, 13, 17, 5, 4); R(c, PAL.warm2, 14, 18, 3, 3); R(c, PAL.rose2, 12, 20, 7, 2);
-    // kapcie
-    R(c, PAL.cream, 9, 30, 4, 2); R(c, PAL.cream, 17, 30, 4, 2);
+export function buildWorld(scene) {
+  // --- niebo
+  mk(scene, 'sky', 360, 320, c => grad(c, 360, 320, ['#07081f', '#0a0b2a', '#0e0f38', '#141447', '#1b1958', '#251f6b', '#31267c', '#412c88', '#53338e'], 1.15));
+  mk(scene, 'pollution', 360, 320, c => {
+    for (let y = 90; y < 320; y++) for (let x = 0; x < 360; x++) {
+      const f = ((y - 90) / 230) ** 1.5, a = Math.floor(f * 6 + bay(x, y)) / 6 * 0.7; if (a <= 0) continue;
+      R(c, `rgba(${150 + f * 85 | 0},${80 + f * 60 | 0},${150 - f * 90 | 0},${a})`, x, y);
+    }
+  });
+  const r = rng(42);
+  mk(scene, 'stars3', 720, 300, c => { for (let i = 0; i < 620; i++) { const col = STARC[Math.floor(r() * 4)]; R(c, `rgba(${col[0]},${col[1]},${col[2]},${0.2 + r() * 0.4})`, r() * 720 | 0, (r() ** 1.15) * 296 | 0); } });
+  mk(scene, 'stars2', 720, 300, c => { for (let i = 0; i < 190; i++) { const col = STARC[Math.floor(r() * 4)], x = r() * 716 | 0, y = (r() ** 1.2) * 294 | 0; R(c, `rgba(${col[0]},${col[1]},${col[2]},${0.55 + r() * 0.4})`, x, y); if (r() < 0.18) sparkle(c, x, y, 1); } });
+  mk(scene, 'stars1', 720, 300, c => { for (let i = 0; i < 44; i++) { const x = 8 + r() * 704 | 0, y = 8 + (r() ** 1.3) * 280 | 0; if (i < 14) sparkle(c, x, y, 3 + (r() * 3 | 0)); else { R(c, '#ffffff', x, y, 2, 2); sparkle(c, x, y, 1); } } });
+  mk(scene, 'milky', 720, 300, c => {
+    const b = new Buf(720, 300), q = rng(5);
+    for (let i = 0; i < 150; i++) { const s = i / 149, x = 50 + s * 620, y = 150 + Math.sin(s * 6.283) * 78 + gauss(q) * 16; b.glow(x + gauss(q) * 10, y, 16 + q() * 18, 9 + q() * 9, Math.cos(s * 6.283) * 0.8, q() < 0.3 ? [150, 120, 230] : [110, 130, 235], 0.06 + q() * 0.07); }
+    for (let i = 0; i < 16; i++) { const s = q(), x = 50 + s * 620, y = 150 + Math.sin(s * 6.283) * 78 + gauss(q) * 10; b.glow(x, y, 7 + q() * 6, 5 + q() * 4, q() * 3, [170, 180, 255], 0.22); }
+    putD(b, c, 5);
+    for (let i = 0; i < 420; i++) { const s = q(); R(c, `rgba(225,230,255,${0.3 + q() * 0.5})`, 50 + s * 620 + gauss(q) * 26 | 0, 150 + Math.sin(s * 6.283) * 78 + gauss(q) * 20 | 0); }
+  });
+  // płaskie chmurki nad horyzontem
+  mk(scene, 'pclouds', 720, 150, c => {
+    const q = rng(3);
+    for (const [x, y, w] of [[30, 20, 120], [250, 70, 90], [420, 30, 150], [600, 96, 100], [150, 118, 70]]) {
+      let cx = x, cw = w;
+      for (let k = 0; k < 4; k++) { R(c, k < 2 ? '#2c3690' : '#222a78', cx, y + k * 4, cw, 4); if (k === 0) R(c, '#3a46a8', cx + 6, y, cw * 0.5 | 0, 2); cx += (q() * 16 | 0) - 4; cw += (q() * 24 | 0) - (k > 1 ? 30 : 0); if (cw < 16) break; }
+    }
+  });
+  // miasto w oddali: budynki i osobno zapalone okna
+  const cq = rng(77), blds = []; let bx = 0;
+  while (bx < 720) { const w = Math.min(720 - bx, 18 + (cq() * 30 | 0)); blds.push({ x: bx, w, h: 56 + (cq() * 100 | 0), t: cq() * 3 | 0, top: cq() }); bx += w; }
+  mk(scene, 'city', 720, 160, c => {
+    R(c, '#1a1e5c', 0, 120, 720, 40);
+    for (const b of blds) {
+      const y = 160 - b.h, col = ['#1d2264', '#252c7a', '#2d368e'][b.t];
+      R(c, col, b.x, y, b.w, b.h); R(c, ['#262d7c', '#2f3892', '#3944a6'][b.t], b.x, y, 2, b.h); R(c, '#171b54', b.x + b.w - 2, y, 2, b.h);
+      if (b.top < 0.3) { R(c, col, b.x + (b.w >> 1), y - 12, 2, 12); R(c, '#8a94e8', b.x + (b.w >> 1), y - 12, 2, 2); }
+      else if (b.top < 0.6 && b.w > 20) { R(c, col, b.x + 5, y - 8, b.w - 10, 8); R(c, ['#262d7c', '#2f3892', '#3944a6'][b.t], b.x + 5, y - 8, 2, 8); }
+      else if (b.top < 0.75) R(c, col, b.x + 3, y - 4, 6, 4);
+    }
+    dith(c, '#141847', 0, 136, 720, 24, 0.5);
+  });
+  mk(scene, 'cityw', 720, 160, c => {
+    for (const b of blds) for (let wy = 160 - b.h + 6; wy < 150; wy += 8) {
+      if (cq() < 0.07 && b.w > 16) { R(c, '#c8d0ff', b.x + 4, wy, b.w - 8, 3); continue; }
+      for (let wx = b.x + 4; wx < b.x + b.w - 5; wx += 6) if (cq() < 0.3) R(c, cq() < 0.75 ? (cq() < 0.5 ? '#d8deff' : '#aab4f0') : '#ffd98a', wx, wy, 3, 4);
+    }
+  });
+  mk(scene, 'glow', 32, 32, c => { for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) { const d = Math.hypot(x - 15.5, y - 15.5) / 16, a = Math.floor(Math.max(0, 1 - d) ** 2 * 6) / 6; if (a > 0) R(c, `rgba(255,255,255,${a})`, x, y); } });
+
+  // --- domy sąsiadów (400 px = 200 jednostek, 10 jednostek zapasu z każdej strony na paralaksę)
+  mk(scene, 'houses', 400, 140, c => {
+    const base = 136, q = rng(9);
+    const tree = (x, h, rr) => { R(c, '#06071a', x - 1, base - (h >> 1), 3, h >> 1); ell(c, '#080920', x, base - h, rr, Math.round(rr * 1.35)); ell(c, '#0c0e2c', x - 2, base - h - 3, rr - 3, rr - 2); dith(c, '#171b48', x - rr + 2, base - h - rr, rr, rr, 0.3); };
+    for (const tx of [6, 84, 152, 232, 296, 374, 394]) tree(tx, 34 + (q() * 16 | 0), 9 + (q() * 5 | 0));
+    const win = (wx, wy, ww, wh) => { R(c, '#06071a', wx - 1, wy - 1, ww + 2, wh + 2); R(c, '#1c2258', wx, wy, ww, wh); R(c, '#2a3274', wx, wy, ww, 1); R(c, '#06071a', wx + (ww >> 1), wy, 1, wh); R(c, '#06071a', wx, wy + (wh >> 1), ww, 1); R(c, '#1c2052', wx - 2, wy + wh + 1, ww + 4, 1); };
+    HOUSES.forEach((h, i) => {
+      const x = (h.x + 10) * 2, w = h.w * 2, hh = h.h * 2, rf = h.roof * 2, top = base - hh;
+      R(c, '#0f1136', x, top, w, hh);
+      for (let y = top + 3; y < base; y += 4) R(c, '#141742', x, y, w, 1);
+      R(c, '#090a24', x + w - 4, top, 4, hh); R(c, '#191d50', x, top, 1, hh);
+      for (let k = 0; k <= rf; k++) { const ww = Math.round((w + 12) * (1 - k / rf)); R(c, k % 4 < 2 ? '#07081e' : '#0b0c2a', Math.round(x + w / 2 - ww / 2), top - k, ww, 1); }
+      for (let k = 2; k < rf; k += 4) dith(c, '#12143a', Math.round(x + w / 2 - (w + 12) * (1 - k / rf) / 2), top - k, Math.round((w + 12) * (1 - k / rf) / 2), 1, 0.5);
+      R(c, '#1a1e52', x - 6, top, w + 12, 2);
+      R(c, '#07081e', x + w - 18, top - rf + 4, 7, rf - 8); R(c, '#161a48', x + w - 19, top - rf + 3, 9, 2);
+      if (i % 2 === 0) { R(c, '#07081e', x + 8, top - rf - 8, 1, 14); R(c, '#07081e', x + 5, top - rf - 6, 7, 1); R(c, '#07081e', x + 6, top - rf - 3, 5, 1); }
+      // drzwi z daszkiem i schodkiem
+      R(c, '#06071a', x + 13, base - 22, 12, 22); R(c, '#1a1e52', x + 14, base - 21, 10, 21); R(c, '#10133c', x + 16, base - 19, 6, 7); R(c, '#10133c', x + 16, base - 10, 6, 8); R(c, '#4a52a8', x + 22, base - 11, 1, 2);
+      R(c, '#1a1e52', x + 10, base - 25, 18, 2); R(c, '#1c2052', x + 10, base - 2, 18, 2);
+      win(x + w - 20, base - 30, 8, 10);
+      if (h.h >= 32) win(x + 30, base - 54, 10, 10);
+      if (i % 2) win(x + w - 18, top + 10, 6, 8);
+      if (h.nb === 'lady') { R(c, '#1a1e52', x + 9, base - 25, 4, 1); R(c, '#06071a', x + 10, base - 24, 1, 2); }
+      if (h.nb === 'gardener') { R(c, '#06071a', x + 62, base - 44, 8, 2); R(c, '#1a1e52', x + 63, base - 42, 6, 4); }
+      if (h.nb === 'student') win(x + 22, top - 14, 8, 8);
+    });
+    R(c, '#06071a', 0, base, 400, 4);
+    for (let x = 0; x < 400; x += 5) ell(c, x % 3 ? '#080920' : '#0b0d2a', x + (q() * 3 | 0), base - 1, 4, 2 + (q() * 4 | 0));
+  });
+
+  // --- taras
+  mk(scene, 'terrace', 360, 184, c => {
+    const q = rng(31);
+    for (let x = 2; x < 360; x += 10) { R(c, W0, x, 6, 5, 18); R(c, W1, x, 6, 2, 18); R(c, W2, x, 7, 1, 5); }
+    R(c, W1, 0, 2, 360, 6); R(c, W3, 0, 2, 360, 1); R(c, W2, 0, 3, 360, 1); R(c, W0, 0, 7, 360, 1);
+    R(c, W1, 0, 22, 360, 5); R(c, W2, 0, 22, 360, 1); R(c, W0, 0, 26, 360, 2);
+    for (const px of [56, 176, 300]) { R(c, W1, px, 0, 10, 28); R(c, W2, px, 0, 3, 28); R(c, W0, px + 9, 0, 1, 28); R(c, W3, px - 1, 0, 12, 2); R(c, W2, px - 1, 2, 12, 1); }
+    for (let y = 28, k = 0; y < 184; y += 13, k++) {
+      R(c, ['#4a2c38', '#52303c', '#462a36'][k % 3], 0, y, 360, 13); R(c, '#603a42', 0, y, 360, 1); R(c, W0, 0, y + 12, 360, 1);
+      for (let i = 0; i < 30; i++) R(c, q() < 0.5 ? '#3e2430' : '#5c3842', q() * 360 | 0, y + 2 + (q() * 9 | 0), 5 + (q() * 24 | 0), 1);
+      for (let i = 0; i < 2; i++) if (q() < 0.5) { const kx = q() * 350 | 0; ell(c, '#3a2230', kx, y + 6, 3, 2); R(c, '#2a1826', kx, y + 6, 2, 1); }
+      let x = (k * 83) % 120;
+      while (x < 360) { R(c, W0, x, y, 1, 12); for (const [dx, dy] of [[3, 3], [3, 9], [-3, 3], [-3, 9]]) R(c, '#8a6450', x + dx, y + dy); x += 110 + (q() * 40 | 0); }
+    }
+    // ciepła plama pod lampkami i przyciemnienie brzegów
+    for (let y = 28; y < 184; y++) for (let x = 0; x < 360; x++) {
+      const warm = Math.max(0, 0.55 - (y - 28) / 110) * Math.max(0, 1 - Math.abs(x - 180) / 240), dark = ((y - 28) / 156) ** 2 * 0.45 + (Math.abs(x - 180) / 180) ** 3 * 0.4, b = bay(x, y);
+      if (b < warm * 0.55) R(c, 'rgba(232,150,90,0.35)', x, y); else if (b < dark) R(c, 'rgba(22,12,40,0.55)', x, y);
+    }
+  });
+  const gy = x => 16 + 22 * (1 - ((x - 180) / 172) ** 2);
+  const garland = on => c => {
+    for (const px of [6, 350]) { R(c, W1, px, 0, 4, 106); R(c, W2, px, 0, 1, 106); R(c, W3, px - 1, 0, 6, 2); }
+    for (let x = 8; x <= 352; x++) R(c, '#241c36', x, gy(x));
+    const cols = [PAL.warm1, PAL.warm0, '#ffa07a', PAL.warm0, '#ffd070'];
+    for (let x = 24, i = 0; x < 340; x += 16, i++) {
+      const y = Math.round(gy(x)) + 1;
+      R(c, '#241c36', x, y, 2, 2);
+      if (on) { c.fillStyle = 'rgba(255,190,90,0.5)'; for (let j = -6; j <= 8; j++) for (let k = -7; k <= 7; k++) if (k * k + (j - 1) * (j - 1) < 46 && bay(x + k, y + j) < 0.6 - (k * k + j * j) / 90) c.fillRect(x + k, y + j + 3, 1, 1); R(c, cols[i % 5], x - 1, y + 2, 4, 5); R(c, PAL.white, x, y + 3, 1, 2); R(c, '#fff4d0', x - 1, y + 2, 4, 1); }
+      else { R(c, '#45405e', x - 1, y + 2, 4, 5); R(c, '#5a5478', x, y + 3, 1, 2); }
+    }
+    // mniejsze lampki wzdłuż poręczy płotu
+    for (let x = 14, i = 0; x < 350; x += 18, i++) { if (on) { R(c, 'rgba(255,190,90,0.35)', x - 2, 78, 6, 6); R(c, cols[i % 5], x, 80, 2, 2); } else R(c, '#45405e', x, 80, 2, 2); }
+  };
+  mk(scene, 'garland_on', 360, 108, garland(true)); mk(scene, 'garland_off', 360, 108, garland(false));
+
+  // --- bohaterka w kraciastym kocu na drewnianym fotelu
+  mk(scene, 'hero', 64, 72, c => {
+    R(c, W0, 6, 12, 5, 56); R(c, W0, 53, 12, 5, 56); R(c, W1, 7, 12, 2, 56); R(c, W1, 54, 12, 2, 56);
+    R(c, W1, 6, 12, 52, 4); R(c, W3, 6, 12, 52, 1);
+    for (let x = 14; x < 52; x += 8) { R(c, W1, x, 16, 4, 32); R(c, W2, x, 16, 1, 32); }
+    R(c, W1, 2, 50, 60, 6); R(c, W2, 2, 50, 60, 2); R(c, W0, 2, 55, 60, 1); R(c, W0, 4, 56, 4, 14); R(c, W0, 56, 56, 4, 14);
+    const plaid = (x, y) => {
+      const sx = (x + 100) % 10 < 3, sy = (y + 100) % 10 < 3; let col = sx && sy ? [30, 32, 84] : sx || sy ? [96, 44, 96] : [172, 56, 68];
+      if ((x + 100) % 10 === 6 || (y + 100) % 10 === 6) col = [226, 150, 120];
+      const sh = (x - 30) / 24 + (y - 40) / 44, k = sh > 0.55 ? 0.62 : sh > 0.25 ? 0.82 : sh < -0.5 ? 1.15 : 1;
+      return `rgb(${Math.min(255, col[0] * k) | 0},${Math.min(255, col[1] * k) | 0},${Math.min(255, col[2] * k) | 0})`;
+    };
+    const blob = (cx, cy, rx, ry, skew = 0) => { for (let y = -ry; y <= ry; y++) for (let x = -rx; x <= rx; x++) { const d = (x * x) / (rx * rx) + (y * y) / (ry * ry); if (d <= 1) R(c, d > 0.86 ? '#4a1a30' : plaid(x + cx + Math.round(y * skew), y + cy), cx + x, cy + y); } };
+    blob(32, 45, 22, 21, 0.15); blob(30, 20, 15, 15, -0.1);
+    for (let i = 0; i < 16; i++) { R(c, '#4a1a30', 14 + i, 36 + Math.round(Math.sin(i / 5) * 2)); R(c, '#4a1a30', 40 + i * 0.6, 34 + i); }
+    ell(c, '#3a1426', 30, 22, 10, 9); ell(c, '#f4d8bc', 30, 23, 8, 7);
+    R(c, '#5a3428', 22, 16, 17, 4); R(c, '#5a3428', 22, 20, 3, 3); R(c, '#5a3428', 36, 20, 3, 2); R(c, '#7a4a38', 26, 16, 6, 1);
+    R(c, INK, 26, 23, 2, 2); R(c, INK, 33, 23, 2, 2); R(c, '#ffffff', 26, 23); R(c, '#ffffff', 33, 23);
+    R(c, '#e89a90', 24, 26, 2, 1); R(c, '#e89a90', 35, 26, 2, 1); R(c, '#b8606a', 29, 27, 3, 1);
+    // kubek w dłoniach i para
+    R(c, '#f6ead0', 27, 38, 9, 8); R(c, '#ffffff', 27, 38, 9, 1); R(c, '#c8b8a0', 34, 39, 2, 7); R(c, '#b86a3a', 28, 39, 7, 1); R(c, '#f6ead0', 36, 40, 2, 1); R(c, '#f6ead0', 37, 41, 1, 3); R(c, '#f6ead0', 36, 44, 2, 1);
+    R(c, '#f4d8bc', 24, 42, 4, 4); R(c, '#f4d8bc', 35, 42, 4, 4); R(c, '#d8b098', 24, 45, 4, 1); R(c, '#d8b098', 35, 45, 4, 1);
+    R(c, 'rgba(255,255,255,0.55)', 30, 34, 1, 2); R(c, 'rgba(255,255,255,0.4)', 32, 31, 1, 2); R(c, 'rgba(255,255,255,0.3)', 30, 28, 1, 2);
+    // podłokietniki przed kocem, kapcie
+    R(c, W2, 0, 40, 10, 4); R(c, W4, 0, 40, 10, 1); R(c, W1, 2, 44, 4, 8); R(c, W2, 54, 40, 10, 4); R(c, W4, 54, 40, 10, 1); R(c, W1, 58, 44, 4, 8);
+    for (const sx of [19, 34]) { R(c, '#f6ead0', sx, 64, 10, 5); R(c, '#c8b8a0', sx, 68, 10, 1); R(c, '#e88a9a', sx + 3, 64, 4, 2); }
   });
   const dog = up => c => {
-    ell(c, '#e8dcc8', 13, 8, 8, 3); ell(c, '#b07a4a', 16, 7, 4, 2); R(c, '#e8dcc8', 20, 9, 4, 2); // ciało, łata, ogon
-    R(c, '#e8dcc8', 3, 9, 5, 2);
-    const hy = up ? 3 : 6; ell(c, '#e8dcc8', 5, hy + 1, 3, 2); R(c, '#b07a4a', 6, hy - 1, 3, 3); R(c, '#8a5a3a', 7, hy - 1, 2, up ? 2 : 4); R(c, PAL.ink, 4, hy + 1); R(c, PAL.ink, 1, hy + 2, 2, 1);
+    const B = '#efe4d0', Sd = '#cdbda4', P = '#b07a4a', D = '#7a4e30';
+    ell(c, Sd, 28, 19, 17, 6); ell(c, B, 28, 17, 17, 6); ell(c, P, 35, 15, 8, 4); ell(c, D, 37, 14, 4, 2);
+    R(c, B, 43, 19, 8, 3); R(c, Sd, 49, 17, 3, 3); R(c, B, 36, 21, 10, 4); R(c, Sd, 36, 24, 10, 1);
+    R(c, B, 5, 21, 13, 4); R(c, Sd, 5, 24, 13, 1); R(c, Sd, 9, 21, 1, 3); R(c, Sd, 13, 21, 1, 3);
+    const hy = up ? 4 : 12;
+    ell(c, B, 12, hy + 5, 7, 5); R(c, B, 2, hy + 5, 7, 5); R(c, Sd, 2, hy + 9, 8, 1); R(c, INK, 1, hy + 5, 3, 2);
+    if (up) { R(c, INK, 8, hy + 3, 2, 2); R(c, '#ffffff', 8, hy + 3); R(c, '#c8504a', 12, hy + 10, 7, 2); } else R(c, INK, 7, hy + 4, 3, 1);
+    R(c, P, 13, hy, 6, 9); R(c, D, 15, hy + 1, 4, 8); R(c, P, 9, hy + 1, 4, 3);
   };
-  mk(scene, 'dog0', 26, 13, dog(false)); mk(scene, 'dog1', 26, 13, dog(true));
+  mk(scene, 'dog0', 52, 26, dog(false)); mk(scene, 'dog1', 52, 26, dog(true));
   const cat = f => c => {
-    const C1 = '#e8a45a', C2 = '#c8803a';
-    if (f === 2) { ell(c, C1, 7, 7, 4, 3); ell(c, C1, 4, 3, 2, 2); R(c, C1, 2, 0); R(c, C1, 5, 0); R(c, PAL.ink, 3, 3); R(c, PAL.ink, 5, 3); R(c, C2, 9, 9, 4, 1); R(c, C2, 6, 5, 3, 1); return; }
-    R(c, C1, 3, 3, 8, 4); R(c, C2, 5, 3, 1, 2); R(c, C2, 8, 3, 1, 2); R(c, C1, 0, 1, 4, 4); R(c, C1, 0, 0); R(c, C1, 3, 0); R(c, PAL.ink, 1, 2); R(c, C1, 11, 0, 1, 4); R(c, C1, 12, 0);
-    if (f === 0) { R(c, C1, 3, 7, 1, 2); R(c, C1, 9, 7, 1, 2); } else { R(c, C1, 5, 7, 1, 2); R(c, C1, 7, 7, 1, 2); }
+    const C1 = '#e8a45a', C2 = '#c47a34', Wt = '#f6ead0';
+    if (f === 2) {
+      ell(c, C1, 15, 14, 7, 6); R(c, Wt, 9, 11, 5, 8); ell(c, C1, 9, 6, 5, 4); R(c, C1, 4, 0, 3, 4); R(c, C1, 11, 0, 3, 4); R(c, '#e88a9a', 5, 2); R(c, '#e88a9a', 12, 2);
+      R(c, INK, 6, 6, 2, 1); R(c, INK, 10, 6, 2, 1); R(c, '#e88a9a', 8, 8); for (const sy of [9, 12, 15]) R(c, C2, 15, sy, 6, 1);
+      R(c, C1, 18, 18, 9, 3); R(c, C2, 23, 18, 2, 3); R(c, Wt, 26, 18, 1, 3); R(c, Wt, 8, 19, 3, 2); R(c, Wt, 12, 19, 3, 2); return;
+    }
+    R(c, C1, 6, 6, 17, 8); for (const sx of [10, 14, 18]) R(c, C2, sx, 6, 2, 4); R(c, Wt, 8, 12, 11, 2);
+    R(c, C1, 0, 2, 9, 8); R(c, C1, 0, 0, 2, 2); R(c, C1, 6, 0, 2, 2); R(c, '#e88a9a', 0, 1); R(c, INK, 2, 5, 2, 2); R(c, '#e88a9a', 0, 7); R(c, Wt, 1, 8, 4, 2); R(c, C2, 4, 2, 3, 1);
+    R(c, C1, 22, 0, 2, 9); R(c, C1, 24, 0, 2, 2); R(c, C2, 22, 3, 2, 2); R(c, Wt, 25, 0, 1, 2);
+    for (const lx of (f === 0 ? [6, 19] : [10, 15])) { R(c, C1, lx, 14, 3, 4); R(c, Wt, lx, 18, 3, 2); }
+    for (const lx of (f === 0 ? [10, 15] : [6, 19])) R(c, C2, lx, 14, 2, 3);
   };
-  mk(scene, 'cat0', 14, 10, cat(0)); mk(scene, 'cat1', 14, 10, cat(1)); mk(scene, 'cat2', 14, 11, cat(2));
-  mk(scene, 'tripod', 15, 20, c => { for (let i = 0; i < 18; i++) { R(c, '#3a3a4a', 7 - i * 0.35, 2 + i); R(c, '#3a3a4a', 7 + i * 0.35, 2 + i); R(c, '#2a2a3a', 7, 2 + i * 0.8); } R(c, '#5a5a6a', 6, 0, 3, 3); });
-  mk(scene, 'tube', 22, 7, c => { R(c, '#e8e8f0', 2, 1, 15, 5); R(c, '#b8b8c8', 2, 5, 15, 1); R(c, '#2a2a3a', 16, 0, 6, 7); R(c, '#3a3a4a', 0, 2, 2, 3); R(c, '#8a8fa8', 6, 0, 2, 1); });
-  const jar = note => c => { R(c, 'rgba(180,220,230,0.35)', 1, 2, 7, 8); R(c, '#a8d0d8', 1, 2, 1, 8); R(c, '#a8d0d8', 7, 2, 1, 8); R(c, '#a8d0d8', 1, 9, 7, 1); R(c, '#8a7a5a', 1, 0, 7, 2); if (note) { R(c, PAL.cream, 3, 3, 3, 6); R(c, PAL.warm2, 3, 5, 3, 1); } };
-  mk(scene, 'jar0', 9, 10, jar(false)); mk(scene, 'jar1', 9, 10, jar(true));
-  mk(scene, 'tea', 12, 16, c => { R(c, PAL.wood2, 0, 9, 12, 2); R(c, PAL.wood0, 2, 11, 1, 5); R(c, PAL.wood0, 9, 11, 1, 5); R(c, PAL.cream, 4, 5, 4, 4); R(c, PAL.cream, 8, 6, 1, 2); R(c, PAL.warm2, 4, 5, 4, 1); R(c, 'rgba(255,255,255,0.5)', 5, 2); R(c, 'rgba(255,255,255,0.35)', 6, 0); R(c, 'rgba(255,255,255,0.4)', 6, 3); });
-  for (const n of NEIGHBORS) mk(scene, 'guy_' + n.id, n.pair ? 15 : 8, 17, c => {
-    const one = (x, col, hair, small) => { const t = small ? 5 : 0; R(c, hair, x + 1, t, 5, 3); R(c, '#f0d0b0', x + 2, t + 2, 3, 3); R(c, col, x + 1, t + 5, 5, small ? 4 : 7); R(c, col, x, t + 6, 7, 2); R(c, '#2a2a40', x + 1, small ? 14 : 12, 2, small ? 3 : 5); R(c, '#2a2a40', x + 4, small ? 14 : 12, 2, small ? 3 : 5); };
-    one(0, n.color, n.hair, n.small); if (n.pair) one(8, '#6a8ac8', '#3a2a2a', false);
+  mk(scene, 'cat0', 28, 20, cat(0)); mk(scene, 'cat1', 28, 20, cat(1)); mk(scene, 'cat2', 28, 21, cat(2));
+  // mosiężny teleskop
+  mk(scene, 'tripod', 30, 40, c => {
+    for (let i = 0; i < 36; i++) { R(c, '#5a3a2a', 14 - i * 0.36, 4 + i, 2, 1); R(c, '#8a6040', 14 - i * 0.36, 4 + i); R(c, '#5a3a2a', 15 + i * 0.36, 4 + i, 2, 1); R(c, '#8a6040', 15 + i * 0.36, 4 + i); if (i < 32) R(c, '#3e2820', 14, 4 + i, 2, 1); }
+    R(c, '#3e2820', 8, 22, 15, 1); R(c, '#c89a4a', 8, 22, 1, 1); R(c, '#c89a4a', 22, 22, 1, 1);
+    R(c, '#3a3a52', 11, 0, 8, 6); R(c, '#6a6a8a', 11, 0, 8, 1); R(c, '#c89a4a', 14, 2, 2, 2);
   });
-  mk(scene, 'gift0', 8, 12, c => { R(c, '#3a3a4a', 2, 0, 4, 1); R(c, '#3a3a4a', 1, 1, 6, 1); R(c, 'rgba(255,198,90,0.5)', 1, 2, 6, 8); R(c, PAL.warm0, 3, 5, 2, 4); R(c, '#3a3a4a', 1, 2, 1, 8); R(c, '#3a3a4a', 6, 2, 1, 8); R(c, '#3a3a4a', 0, 10, 8, 2); });
-  mk(scene, 'gift1', 10, 13, c => { R(c, '#b8603a', 2, 8, 6, 5); R(c, '#d87a4a', 1, 7, 8, 2); for (const [x, y] of [[2, 4], [4, 2], [6, 3], [7, 5], [3, 6], [5, 5], [1, 2], [8, 1]]) { R(c, PAL.green, x, y, 1, 3); R(c, '#c86aa8', x, y - 1); } });
-  mk(scene, 'gift2', 16, 6, c => { ell(c, '#5a7ac8', 8, 3, 7, 2); R(c, '#8fa8e8', 3, 2, 10, 1); R(c, PAL.warm0, 7, 3, 2, 1); });
-  mk(scene, 'gift3', 7, 14, c => { R(c, '#8a8fa8', 3, 0, 1, 3); R(c, PAL.wood3, 1, 3, 5, 1); for (const [x, h] of [[1, 8], [3, 10], [5, 6]]) { R(c, '#c8d0e8', x, 4, 1, h); } });
-  mk(scene, 'cloud', 56, 18, c => { for (const [x, y, rx, ry] of [[14, 11, 12, 5], [28, 8, 13, 7], [42, 11, 12, 5], [22, 12, 16, 4]]) ell(c, '#3a4466', x, y + 1, rx, ry); for (const [x, y, rx, ry] of [[14, 10, 11, 4], [28, 7, 12, 6], [42, 10, 11, 4]]) ell(c, '#59648c', x, y, rx, ry); });
+  mk(scene, 'tube', 46, 14, c => {
+    R(c, '#c89a4a', 4, 3, 31, 8); R(c, '#f0cc80', 4, 3, 31, 2); R(c, '#e0b060', 4, 5, 31, 1); R(c, '#8a6430', 4, 9, 31, 2);
+    for (const bx2 of [11, 23]) { R(c, '#6a4a2a', bx2, 3, 2, 8); R(c, '#a87a3a', bx2, 3, 2, 1); }
+    R(c, '#a87a3a', 35, 1, 10, 12); R(c, '#f0cc80', 35, 1, 10, 2); R(c, '#6a4a2a', 35, 11, 10, 2); R(c, '#23264e', 44, 3, 2, 8); R(c, '#5a64b0', 44, 4, 1, 2);
+    R(c, '#6a4a2a', 0, 5, 4, 4); R(c, '#3e2820', 0, 5, 1, 4); R(c, '#8a6430', 12, 0, 12, 2); R(c, '#f0cc80', 12, 0, 12, 1);
+  });
+  const jar = note => c => {
+    R(c, '#8a7a5a', 2, 0, 14, 4); R(c, '#b8a47a', 2, 0, 14, 1); R(c, '#6a5c40', 2, 3, 14, 1);
+    R(c, 'rgba(170,215,235,0.28)', 2, 4, 14, 16); R(c, '#a8d0e0', 2, 4, 1, 16); R(c, '#a8d0e0', 15, 4, 1, 16); R(c, '#a8d0e0', 2, 19, 14, 1); R(c, 'rgba(255,255,255,0.7)', 4, 6, 1, 8); R(c, 'rgba(255,255,255,0.4)', 6, 6, 1, 3);
+    if (note) { R(c, PAL.cream, 6, 7, 7, 11); R(c, '#d8c8a8', 12, 7, 1, 11); R(c, PAL.warm2, 6, 11, 7, 2); R(c, '#8a6450', 7, 9, 4, 1); R(c, '#8a6450', 7, 15, 5, 1); }
+  };
+  mk(scene, 'jar0', 18, 20, jar(false)); mk(scene, 'jar1', 18, 20, jar(true));
+  mk(scene, 'tea', 24, 32, c => {
+    R(c, W2, 0, 18, 24, 3); R(c, W4, 0, 18, 24, 1); R(c, W0, 0, 21, 24, 1); R(c, W1, 3, 22, 2, 10); R(c, W1, 19, 22, 2, 10); R(c, W0, 5, 26, 14, 1);
+    R(c, '#f6ead0', 8, 10, 8, 8); R(c, '#ffffff', 8, 10, 8, 1); R(c, '#c8b8a0', 14, 11, 2, 7); R(c, '#b86a3a', 9, 11, 6, 1); R(c, '#f6ead0', 16, 12, 2, 1); R(c, '#f6ead0', 17, 13, 1, 3); R(c, '#f6ead0', 16, 16, 2, 1);
+    R(c, 'rgba(255,255,255,0.55)', 11, 6, 1, 3); R(c, 'rgba(255,255,255,0.4)', 13, 3, 1, 3); R(c, 'rgba(255,255,255,0.3)', 11, 0, 1, 3);
+  });
+  for (const n of NEIGHBORS) mk(scene, 'guy_' + n.id, n.pair ? 30 : 16, 34, c => {
+    const one = (x, col, hair, small, scarf) => {
+      const t = small ? 10 : 0, bh = small ? 9 : 14, ly = t + 10 + bh;
+      R(c, hair, x + 3, t, 10, 5); R(c, hair, x + 2, t + 2, 2, 5); R(c, '#f0d0b0', x + 4, t + 3, 8, 7); R(c, hair, x + 4, t + 3, 8, 2); R(c, INK, x + 6, t + 6); R(c, INK, x + 10, t + 6); R(c, '#d8a890', x + 7, t + 8, 3, 1);
+      R(c, col, x + 2, t + 10, 12, bh); R(c, col, x, t + 11, 16, 5); R(c, 'rgba(0,0,30,0.3)', x + 11, t + 10, 3, bh); R(c, 'rgba(255,255,255,0.18)', x + 2, t + 10, 2, bh); R(c, scarf, x + 4, t + 10, 8, 2);
+      R(c, '#f0d0b0', x, t + 16, 2, 2); R(c, '#f0d0b0', x + 14, t + 16, 2, 2);
+      R(c, '#23264e', x + 3, ly, 4, 34 - ly - 2); R(c, '#23264e', x + 9, ly, 4, 34 - ly - 2); R(c, '#0c0d2a', x + 2, 32, 5, 2); R(c, '#0c0d2a', x + 9, 32, 5, 2);
+    };
+    one(0, n.color, n.hair, n.small, '#f6ead0'); if (n.pair) one(14, '#6a8ac8', '#3a2a2a', false, '#ffc65a');
+  });
+  mk(scene, 'gift0', 16, 24, c => { R(c, '#3a3a52', 6, 0, 4, 2); R(c, '#3a3a52', 3, 2, 10, 2); R(c, 'rgba(255,198,90,0.45)', 3, 4, 10, 16); R(c, PAL.warm0, 6, 9, 4, 9); R(c, '#ffffff', 7, 11, 2, 5); R(c, PAL.warm2, 6, 17, 4, 2); for (const x of [2, 7, 13]) R(c, '#3a3a52', x, 4, 1, 16); R(c, '#3a3a52', 1, 20, 14, 2); R(c, '#55557a', 1, 20, 14, 1); R(c, '#3a3a52', 3, 22, 10, 2); });
+  mk(scene, 'gift1', 20, 26, c => { R(c, '#b8603a', 4, 16, 12, 10); R(c, '#d87a4a', 2, 14, 16, 3); R(c, '#8a4428', 13, 17, 3, 9); R(c, '#e89a6a', 2, 14, 16, 1); for (const [x, y] of [[4, 8], [8, 4], [12, 6], [14, 10], [6, 12], [10, 10], [2, 4], [16, 2], [10, 1]]) { R(c, PAL.green, x, y, 2, 6); R(c, '#3a5a44', x + 1, y + 2, 1, 4); R(c, '#c86aa8', x, y - 2, 2, 2); R(c, '#e89ac8', x, y - 2); } });
+  mk(scene, 'gift2', 32, 12, c => { ell(c, '#3a4f9a', 16, 7, 15, 4); ell(c, '#5a7ac8', 16, 6, 15, 4); R(c, '#8fa8e8', 6, 3, 20, 1); for (let x = 5; x < 28; x += 5) R(c, '#3a4f9a', x, 5, 1, 4); R(c, PAL.warm0, 15, 6, 2, 2); });
+  mk(scene, 'gift3', 14, 28, c => { R(c, '#8a8fa8', 6, 0, 1, 6); R(c, W3, 2, 6, 10, 2); R(c, W4, 2, 6, 10, 1); for (const [x, h] of [[2, 15], [5, 19], [8, 12], [11, 17]]) { R(c, '#c8d0e8', x, 8, 1, h); R(c, '#8a94c0', x + 1, 8, 1, h); R(c, '#ffffff', x, 8 + h - 2); } R(c, PAL.warm1, 6, 24, 2, 3); });
+  mk(scene, 'cloud', 112, 36, c => {
+    for (const [x, y, rx, ry] of [[28, 23, 24, 10], [56, 17, 26, 14], [84, 23, 24, 10], [44, 25, 32, 8]]) ell(c, '#2a3160', x, y + 2, rx, ry);
+    for (const [x, y, rx, ry] of [[28, 21, 22, 9], [56, 15, 24, 12], [84, 21, 22, 9]]) ell(c, '#46508a', x, y, rx, ry);
+    for (const [x, y, rx, ry] of [[24, 17, 14, 4], [52, 9, 16, 5], [82, 17, 14, 4]]) ell(c, '#6672ae', x, y, rx, ry);
+    dith(c, '#2a3160', 6, 22, 100, 10, 0.4);
+  });
   mk(scene, 'mote', 2, 2, c => R(c, '#fff', 0, 0, 2, 2));
-  mk(scene, 'comet_sky', 70, 30, c => { const b = new Buf(70, 30); for (let s = 0; s < 60; s++) b.glow(8 + s, 22 - s * 0.3, 1.2 + s * 0.07, 1.2 + s * 0.07, 0, [170, 220, 255], 0.45 * (1 - s / 62)); b.glow(8, 22, 2, 2, 0, [230, 255, 245], 1.8); b.put(c); });
-  for (let p = 0; p < 7; p++) mk(scene, 'moonph' + p, 11, 11, c => { const sh = [-99, -7, -4, 99, 4, 7, 99][p]; for (let y = -5; y <= 5; y++) for (let x = -5; x <= 5; x++) if (x * x + y * y <= 26 && !(sh !== 99 && (x - sh) ** 2 + y * y <= 30) && p !== 0 && p !== 6) R(c, (x + y) % 5 === 0 ? '#c8c8d8' : '#f0f0e0', x + 5, y + 5); });
+  mk(scene, 'comet_sky', 140, 60, c => { const b = new Buf(140, 60); for (let s = 0; s < 120; s++) b.glow(16 + s, 44 - s * 0.3, 2 + s * 0.08, 2 + s * 0.08, 0, [170, 215, 255], 0.3 * (1 - s / 124)); b.glow(16, 44, 4, 4, 0, [235, 255, 248], 1.8); putD(b, c, 5); sparkle(c, 16, 44, 5); });
+  for (let p = 0; p < 7; p++) mk(scene, 'moonph' + p, 22, 22, c => {
+    if (p === 0 || p === 6) return;
+    const sh = [0, -13, -8, 99, 8, 13, 0][p];
+    for (let y = -10; y <= 10; y++) for (let x = -10; x <= 10; x++) {
+      if (x * x + y * y > 105 || (sh !== 99 && (x - sh) ** 2 + y * y <= 118)) continue;
+      const crater = [[-3, -3, 3], [3, 2, 2], [-2, 5, 2], [5, -5, 2]].some(([a, b2, rr]) => (x - a) ** 2 + (y - b2) ** 2 <= rr * rr);
+      R(c, crater ? '#c4c6dc' : x + y < -9 ? '#ffffff' : '#eef0f8', x + 11, y + 11);
+    }
+  });
   // ikonki prognozy 12x12
   const star = (c, x, y) => { R(c, PAL.warm0, x, y - 2, 1, 5); R(c, PAL.warm0, x - 2, y, 5, 1); R(c, PAL.white, x, y); };
   const cl = (c, x, y, col) => { ell(c, col, x, y, 4, 2); ell(c, col, x + 1, y - 2, 2, 2); };
@@ -276,5 +442,4 @@ export function buildWorld(scene) {
   mk(scene, 'w_maybe', 12, 12, c => { star(c, 3, 3); cl(c, 6, 8, '#8a94b8'); });
   mk(scene, 'w_likely', 12, 12, c => { cl(c, 5, 5, '#6a7498'); cl(c, 6, 9, '#aab4d0'); });
   mk(scene, 'ic_tea', 12, 12, c => { R(c, PAL.cream, 3, 5, 5, 5); R(c, PAL.cream, 8, 6, 2, 1); R(c, PAL.cream, 9, 7, 1, 2); R(c, PAL.cream, 8, 8, 1, 1); R(c, PAL.warm2, 3, 5, 5, 1); R(c, '#c8c8d8', 4, 2, 1, 2); R(c, '#c8c8d8', 6, 1, 1, 2); });
-  mk(scene, 'paper', 8, 8, c => { R(c, PAL.cream, 0, 0, 8, 8); });
 }

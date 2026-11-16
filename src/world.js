@@ -11,36 +11,44 @@ export class World {
   constructor(scene, handlers = {}) {
     this.s = scene; this.h = handlers;
     const c = this.c = scene.add.container(0, 0).setScale(2);
-    const img = (x, y, key) => { const i = scene.add.image(x, y, key).setOrigin(0); c.add(i); return i; };
-    const rect = (x, y, w, h, col, a = 1) => { const r = scene.add.rectangle(x, y, w, h, col, a).setOrigin(0); c.add(r); return r; };
-    const glow = (x, y, sc, col, a) => { const g = scene.add.image(x, y, 'glow').setScale(sc).setTint(col).setAlpha(a).setBlendMode(ADD); c.add(g); return g; };
+    // tekstury świata mają podwójną gęstość, stąd skala 0.5
+    const img = (x, y, key, into = c) => { const i = scene.add.image(x, y, key).setOrigin(0).setScale(0.5); into.add(i); return i; };
+    const rect = (x, y, w, h, col, a = 1, into = c) => { const r = scene.add.rectangle(x, y, w, h, col, a).setOrigin(0); into.add(r); return r; };
+    const glow = (x, y, sc, col, a, into = c) => { const g = scene.add.image(x, y, 'glow').setScale(sc).setTint(col).setAlpha(a).setBlendMode(ADD); into.add(g); return g; };
+    // warstwa kafelkowa do paralaksy: v = dryf (px/s), k = wychylenie za palcem (px)
+    this.layers = [];
+    const tile = (y, h, key, v, k) => { const t = scene.add.tileSprite(0, y, 360, h, key).setOrigin(0).setScale(0.5); c.add(t); this.layers.push({ t, v, k }); return t; };
 
     img(0, 0, 'sky');
-    this.milky = img(0, 0, 'milky');
-    this.st = [img(0, 0, 'stars1'), img(0, 0, 'stars2'), img(0, 0, 'stars3')];
-    scene.tweens.add({ targets: this.st[0], alpha: 0.75, duration: 1700, yoyo: true, repeat: -1 });
-    this.moon = img(146, 34, 'moonph3');
+    this.milky = tile(0, 300, 'milky', 1.2, 3);
+    this.st = [tile(0, 300, 'stars1', 2.4, 5), tile(0, 300, 'stars2', 1.7, 3.5), tile(0, 300, 'stars3', 1.1, 2)];
+    scene.tweens.add({ targets: this.st[0], alpha: 0.7, duration: 1700, yoyo: true, repeat: -1 });
+    this.moon = img(140, 30, 'moonph3');
     this.comet = img(46, 34, 'comet_sky').setVisible(false).setOrigin(0.12, 0.75);
     this.target = scene.add.image(0, 0, 'obj_moon').setScale(0.5).setVisible(false); c.add(this.target);
     this.targetRing = scene.add.rectangle(0, 0, 28, 28).setStrokeStyle(1, 0xffc65a, 0.7).setVisible(false); c.add(this.targetRing);
+    tile(40, 150, 'pclouds', 4, 9);
+    tile(70, 160, 'city', 0, 12);
+    this.cityw = tile(70, 160, 'cityw', 0, 12);
     this.poll = img(0, 0, 'pollution');
     this.clouds = [];
     for (let i = 0; i < 6; i++) this.clouds.push(img(-80, 10 + i * 17, 'cloud').setAlpha(0));
-    img(0, 88, 'houses');
 
-    // światła sąsiadów i zwykłe okna
+    // domy z ich światłami: osobna grupa, żeby przesuwała się razem
+    const hg = this.hg = scene.add.container(0, 0); c.add(hg);
+    img(-10, 82, 'houses', hg);
     this.lights = {}; this.anon = [];
     HOUSES.forEach((h, i) => {
       const parts = [];
       const base = 150;
-      if (h.nb === 'lady') parts.push(rect(h.x + 5, base - 11, 2, 2, 0xffe9a8), glow(h.x + 6, base - 10, 1.1, 0xffc65a, 0.8));
-      if (h.nb === 'kid') parts.push(rect(h.x + 15, base - 27, 5, 5, 0xffc65a), rect(h.x + 17, base - 27, 1, 5, 0x0d1330), glow(h.x + 17, base - 25, 0.9, 0xffc65a, 0.6));
-      if (h.nb === 'gardener') parts.push(rect(h.x + 32, base - 21, 3, 2, 0xffffff), glow(h.x + 31, base - 14, 1.6, 0xe8f0ff, 0.75));
-      if (h.nb === 'student') parts.push(rect(h.x + 11, base - h.h - 7, 4, 4, 0xe8f0ff), glow(h.x + 13, base - h.h - 5, 0.9, 0xbcd0ff, 0.7));
-      if (h.nb === 'couple') for (let x = 2; x < 34; x += 4) parts.push(rect(h.x + x, base - 5 + (x % 8 ? 0 : 1), 1, 1, [0xffc65a, 0xe88a9a, 0x8fb8ff, 0xffe9a8][(x / 4) % 4]), ...(x % 8 ? [] : [glow(h.x + x, base - 5, 0.4, 0xffc65a, 0.5)]));
+      if (h.nb === 'lady') parts.push(rect(h.x + 5, base - 11, 2, 2, 0xffe9a8, 1, hg), glow(h.x + 6, base - 10, 1.1, 0xffc65a, 0.8, hg));
+      if (h.nb === 'kid') parts.push(rect(h.x + 15, base - 27, 5, 5, 0xffc65a, 1, hg), rect(h.x + 17, base - 27, 0.5, 5, 0x06071a, 1, hg), rect(h.x + 15, base - 25, 5, 0.5, 0x06071a, 1, hg), glow(h.x + 17, base - 25, 0.9, 0xffc65a, 0.6, hg));
+      if (h.nb === 'gardener') parts.push(rect(h.x + 31.5, base - 21, 3, 2, 0xffffff, 1, hg), glow(h.x + 31, base - 14, 1.6, 0xe8f0ff, 0.75, hg));
+      if (h.nb === 'student') parts.push(rect(h.x + 11, base - h.h - 7, 4, 4, 0xe8f0ff, 1, hg), rect(h.x + 13, base - h.h - 7, 0.5, 4, 0x06071a, 1, hg), glow(h.x + 13, base - h.h - 5, 0.9, 0xbcd0ff, 0.7, hg));
+      if (h.nb === 'couple') for (let x = 2; x < 34; x += 3) parts.push(rect(h.x + x, base - 5 + (x % 2 ? 0 : 1), 1, 1, [0xffc65a, 0xe88a9a, 0x8fb8ff, 0xffe9a8][x % 4], 1, hg), ...(x % 6 ? [] : [glow(h.x + x, base - 5, 0.4, 0xffc65a, 0.5, hg)]));
       this.lights[h.nb] = parts;
-      this.anon.push(rect(h.x + 5, base - 15, 4, 5, 0xc8903a, 0.85));
-      if (i % 2) this.anon.push(rect(h.x + h.w - 9, base - h.h + 5, 3, 4, 0xa8783a, 0.7));
+      const w1 = scene.add.container(0, 0, [rect(h.x + h.w - 10, base - 15, 4, 5, 0xe8a84a, 0.9, hg), rect(h.x + h.w - 8, base - 15, 0.5, 5, 0x06071a, 1, hg)]); hg.add(w1); this.anon.push(w1);
+      if (i % 2) this.anon.push(rect(h.x + h.w - 9, base - h.h + 5, 3, 4, 0xc8903a, 0.8, hg));
     });
 
     img(0, 146, 'terrace');
@@ -54,12 +62,12 @@ export class World {
     this.jarGlow = glow(152, 141, 0.7, 0xffe9a8, 0.7).setVisible(false);
     scene.tweens.add({ targets: this.jarGlow, alpha: 0.25, duration: 600, yoyo: true, repeat: -1 });
     this.tea = img(90, 196, 'tea');
-    this.hero = scene.add.image(77, 212, 'hero').setOrigin(0.5, 1); c.add(this.hero);
-    scene.tweens.add({ targets: this.hero, scaleY: 1.03, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    this.hero = scene.add.image(77, 213, 'hero').setOrigin(0.5, 1).setScale(0.5); c.add(this.hero);
+    scene.tweens.add({ targets: this.hero, scaleY: 0.512, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     img(104, 187, 'tripod');
-    this.tube = scene.add.image(111, 188, 'tube').setOrigin(0.3, 0.5).setRotation(-0.7); c.add(this.tube);
+    this.tube = scene.add.image(111.5, 189, 'tube').setOrigin(0.3, 0.5).setScale(0.5).setRotation(-0.7); c.add(this.tube);
     this.dog = img(30, 205, 'dog0');
-    this.cat = scene.add.image(140, 222, 'cat0').setOrigin(0.5, 1); c.add(this.cat);
+    this.cat = scene.add.image(140, 222, 'cat0').setOrigin(0.5, 1).setScale(0.5); c.add(this.cat);
     this.catWalk();
     this.fx = scene.add.container(0, 0); c.add(this.fx);
 
@@ -69,6 +77,19 @@ export class World {
     zone(138, 128, 28, 26, () => this.h.jar && this.h.jar());
     zone(24, 196, 36, 26, () => this.h.dog && this.h.dog());
     zone(84, 190, 22, 26, () => this.h.tea && this.h.tea());
+    // paralaksa: warstwy dryfują powoli i lekko wychylają się za palcem
+    let t = 0, off = 0, moved = false;
+    scene.input.on('pointermove', () => { moved = true; });
+    scene.input.on('pointerdown', () => { moved = true; });
+    const upd = (time, dt) => {
+      t += dt / 1000;
+      const want = moved ? Phaser.Math.Clamp((scene.input.activePointer.worldX / 360 - 0.5) * 2, -1, 1) : 0;
+      off += (want - off) * Math.min(1, dt / 500);
+      for (const l of this.layers) l.t.tilePositionX = t * l.v + off * l.k;
+      this.hg.x = -off * 4;
+    };
+    scene.events.on('update', upd);
+    scene.events.once('shutdown', () => scene.events.off('update', upd));
     this.refresh();
   }
 
@@ -76,7 +97,8 @@ export class World {
     const d = darkness(block), raw = 1 + lightsOff();
     this.st[1].setAlpha(Math.max(0.08, Math.min(1, (d - 1) / 2)));
     this.st[2].setAlpha(Math.max(0, Math.min(1, (d - 3) / 2.5)));
-    this.milky.setAlpha(season() === 3 ? Math.max(0, Math.min(0.9, (d - 2) / 4)) : Math.max(0, (d - 4) / 8));
+    this.milky.setAlpha(season() === 3 ? Math.max(0.1, Math.min(1, (d - 1) / 4)) : Math.max(0, Math.min(0.6, (d - 2) / 6)));
+    this.cityw.setAlpha(Math.max(0.25, 1 - (raw - 1) / 6));
     this.poll.setAlpha(Math.max(0.06, 1 - (raw - 1) / 5.2) * (S.lamps ? 1 : 0.85));
     for (const n of NEIGHBORS) for (const p of this.lights[n.id]) p.setVisible(!S.nb[n.id].off);
     const late = S.cur ? S.cur.b : 0;
@@ -97,7 +119,7 @@ export class World {
 
   setTarget(id, quiet) {
     if (!id || id === 'rest') { this.target.setVisible(false); this.targetRing.setVisible(false); return; }
-    const p = id === 'comet' ? { x: 52, y: 44 } : id === 'eclipse' ? { x: 151, y: 39 } : skyPos(id);
+    const p = id === 'comet' ? { x: 52, y: 44 } : id === 'eclipse' ? { x: 145.5, y: 35.5 } : skyPos(id);
     this.target.setTexture('obj_' + id).setPosition(p.x, p.y).setVisible(id !== 'comet' && id !== 'eclipse').setAlpha(0.9);
     this.targetRing.setPosition(p.x, p.y).setVisible(true);
     const ang = Math.atan2(p.y - 188, p.x - 111);

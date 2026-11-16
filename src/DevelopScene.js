@@ -138,7 +138,7 @@ export class DevelopScene extends Phaser.Scene {
     this.tweens.add({ targets: im, alpha: 1, duration: 900 });
     txt(this, CX, 60, this.o.name, { size: 14, ox: 0.5, color: '#ffc65a', style: 'bold', wrap: 330, align: 'center' });
     txt(this, CX, CY + 122, '★'.repeat(stars) + '☆'.repeat(3 - stars), { size: 26, ox: 0.5, color: '#ffc65a' });
-    txt(this, CX, CY + 162, (capped ? 'Dobra robota, ale na więcej gwiazdek trzeba więcej światła.' : ['Trochę nieostre, ale Twoje.', 'Ładny kadr!', 'Zdjęcie jak z atlasu!'][stars - 1]) + (res.upgrade ? '\nNaklejka w albumie sama się podmieniła.' : '') + (st.album.gold ? '\nZebrane jednym ciągiem: złota ramka.' : '') + `\n\n${this.o.note}`, { size: 12, ox: 0.5, align: 'center', wrap: 320, color: '#d8dcf0' });
+    txt(this, CX, CY + 162, (capped ? 'Dobra robota, ale na więcej gwiazdek trzeba więcej światła.' : ['Trochę nieostre, ale Twoje.', 'Ładny kadr!', 'Zdjęcie jak z atlasu!'][stars - 1]) + (res.upgrade ? '\nNaklejka w albumie sama się podmieniła.' : '') + (st.album.gold ? '\nZebrane jednym ciągiem: złota ramka.' : '') + `\n\n${this.o.fact}`, { size: 12, ox: 0.5, align: 'center', wrap: 320, color: '#d8dcf0' });
     button(this, CX, H - 40, 200, 40, res.upgrade ? 'Wróć na taras' : 'Wklej do albumu', () => (res.upgrade ? this.scene.start('Night') : this.scene.start('Album', { paste: this.id })), { fill: 0x8a3a56, stroke: 0xe88a9a, size: 15 });
   }
 }

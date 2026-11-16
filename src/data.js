@@ -1,7 +1,7 @@
 // Dane gry: obiekty, sąsiedzi, wydarzenia. Wszystko, co dotyczy balansu, jest tutaj.
 
 export const SEASONS = ['Jesień', 'Zima', 'Wiosna', 'Lato'];
-export const NIGHTS_PER_SEASON = 7;
+export const NIGHTS_PER_SEASON = 12;
 export const BLOCKS = 8;
 
 // typ obiektu -> etykieta i minigierka przy wywoływaniu
@@ -95,7 +95,7 @@ export const NEIGHBORS = [
     guest: 'Mam nadmiar pomidorów i składane krzesło. Wpadnę kiedyś, jak będzie się świeciło.',
   },
   {
-    id: 'student', name: 'Ola', who: 'studentka z poddasza', light: 'lampę biurkową', from: 7,
+    id: 'student', name: 'Ola', who: 'studentka z poddasza', light: 'lampę biurkową', from: 12,
     likes: ['nebula', 'galaxy'], color: '#e8a070', hair: '#3a2a4a',
     hello: 'Hej! Uczę się po nocach na poddaszu i widzę Twoją czerwoną latarkę. Fajnie wiedzieć, że ktoś jeszcze nie śpi.',
     ask: ['Potrzebuję tapety na sesję. Może {o}?', 'Zdałam kolokwium! W nagrodę chciałabym zobaczyć: {o}.', 'Znów zarywam noc. Podeślesz mi {o} na pocieszenie?'],
@@ -103,7 +103,7 @@ export const NEIGHBORS = [
     guest: 'Po sesji wpadnę z herbatą. Zapal lampki, to będę wiedziała, że można.',
   },
   {
-    id: 'couple', name: 'Ania i Jan', who: 'para z końca ulicy', light: 'girlandy na płocie', from: 14,
+    id: 'couple', name: 'Ania i Jan', who: 'para z końca ulicy', light: 'girlandy na płocie', from: 24,
     likes: ['nebula', 'galaxy', 'globular'], color: '#e87a8a', hair: '#c89a5a', pair: true,
     hello: 'Dobry wieczór! Mieszkamy na końcu ulicy, to nasze girlandy tak mrugają. Podobno robisz zdjęcia nieba?',
     ask: ['Zbliża się nasza rocznica. Szukamy czegoś ładnego, może {o}?', 'Ramka już wisi i czeka. Zmieściłoby się w niej: {o}?', 'Jan się założył, że tego się nie da sfotografować: {o}. Wygramy?'],
@@ -143,10 +143,98 @@ export const FORECAST_W = [[0.5, 0.3, 0.2], [0.45, 0.3, 0.25], [0.5, 0.3, 0.2], 
 
 // Wydarzenia: pora roku i noc (od 0)
 export const EVENTS = {
-  iss: { s: 0, nights: [2, 5] },
-  geminids: { s: 1, night: 4 },
-  eclipse: { s: 2, night: 3, blocks: [3, 4] },
-  perseids: { s: 3, night: 1 },
-  comet: { s: 3, night: 6 },
+  iss: { s: 0, nights: [2, 7] },
+  geminids: { s: 1, night: 8 },
+  eclipse: { s: 2, night: 4, blocks: [3, 4] },
+  perseids: { s: 3, night: 3 },
+  comet: { s: 3, night: 11 },
 };
-export const FULL_MOON_NIGHT = 3;
+
+// Fazy Księżyca: cykl trwa jedną porę roku (12 nocy). Pora zaczyna się wąskim sierpem,
+// pełnia wypada w 5. noc, nów w 11. Indeks fazy: 0 = nów, 6 = pełnia.
+export const moonIndex = night => (night + 2) % 12;
+export const PHASES = [
+  // nights = indeksy fazy, nie numery nocy
+  { id: 'ph_cres', name: 'Sierp', nights: [1, 2, 10, 11] },
+  { id: 'ph_q1', name: 'Pierwsza kwadra', nights: [3] },
+  { id: 'ph_gib', name: 'Garbaty Księżyc', nights: [4, 5, 7, 8] },
+  { id: 'ph_full', name: 'Pełnia', nights: [6] },
+  { id: 'ph_q3', name: 'Ostatnia kwadra', nights: [9] },
+];
+export const phaseOf = night => PHASES.find(p => p.nights.includes(moonIndex(night))) || null; // null = nów
+export const brightMoon = night => [5, 6, 7].includes(moonIndex(night)); // okolice pełni: niebo jaśniejsze o 1
+for (const p of PHASES) FEATS.push({ id: p.id, name: p.name, sym: '☾', color: '#7a80b8', hint: 'Sfotografuj Księżyc w tej fazie.' });
+
+// Ciekawostki do przeczytania na wywołanym zdjęciu
+const FACTS = {
+  moon: 'Księżyc oddala się od Ziemi o około 3,8 cm rocznie. Zawsze widzimy tę samą jego stronę, bo obraca się dokładnie raz na jedno okrążenie.',
+  saturn: 'Pierścienie Saturna mają ponad 270 tysięcy km średnicy, ale miejscami tylko kilkadziesiąt metrów grubości. Sama planeta ma średnią gęstość mniejszą niż woda.',
+  owl: 'Leży w Kasjopei, około 8 tysięcy lat świetlnych stąd. Dwie najjaśniejsze gwiazdy to „oczy” sowy, a rozłożone rzędy gwiazd to skrzydła.',
+  dblcl: 'To dwie młode gromady, h i chi Persei, odległe o ponad 7 tysięcy lat świetlnych. Z ciemnego miejsca widać je gołym okiem jako mglistą plamkę między Perseuszem a Kasjopeją.',
+  m15: 'Jedna z najstarszych gromad kulistych: ma około 12 miliardów lat. Jej środek jest tak gęsty, że astronomowie podejrzewają tam czarną dziurę.',
+  m31: 'Najdalszy obiekt widoczny gołym okiem: 2,5 miliona lat świetlnych. Światło, które łapiesz, wyruszyło, zanim pojawił się człowiek rozumny. Za kilka miliardów lat zderzy się z Drogą Mleczną.',
+  n7000: 'Jej kształt naprawdę przypomina kontynent, razem z Zatoką Meksykańską. Świeci na czerwono, bo pobliskie gorące gwiazdy pobudzają wodór.',
+  m33: 'Trzecia co do wielkości galaktyka Grupy Lokalnej, po Andromedzie i Drodze Mlecznej. Leży niecałe 3 miliony lat świetlnych stąd i jest bardzo rozmyta, dlatego potrzebuje ciemnego nieba.',
+  heart: 'Leży w Kasjopei, około 7500 lat świetlnych stąd. Gromada młodych gwiazd w środku wydmuchuje gaz i rzeźbi kształt serca.',
+  helix: 'Jedna z najbliższych mgławic planetarnych, około 650 lat świetlnych stąd. Tak za kilka miliardów lat skończy Słońce: odrzuci otoczkę i zostawi białego karła.',
+  jupiter: 'Zmieściłoby się w nim ponad 1300 Ziem. Cztery największe księżyce odkrył Galileusz w 1610 roku i widać je już w lornetce.',
+  mars: 'Czerwony kolor to rdza, czyli tlenki żelaza w pyle. Na Marsie stoi Olympus Mons, najwyższy wulkan Układu Słonecznego: ponad 20 km.',
+  m45: 'Gołym okiem widać zwykle sześć lub siedem gwiazd, a jest ich ponad tysiąc. W Japonii nazywają się Subaru, stąd logo z gwiazdkami.',
+  m35: 'Leży u stóp Bliźniąt, niecałe 3 tysiące lat świetlnych stąd. Na niebie zajmuje tyle miejsca, co Księżyc w pełni.',
+  m37: 'Najbogatsza z trzech gromad Woźnicy: ponad 500 gwiazd i około 500 milionów lat. W środku świeci pomarańczowy olbrzym.',
+  m42: 'Kolebka gwiazd odległa o około 1300 lat świetlnych. Gołym okiem widać ją jako środkową „gwiazdę” w mieczu Oriona.',
+  flame: 'Leży tuż obok Alnitaka, skrajnej gwiazdy Pasa Oriona. Ciemne pasma pyłu na jej tle wyglądają jak knot płomienia.',
+  m1: 'Pozostałość po supernowej, którą chińscy astronomowie zapisali w 1054 roku. W środku wiruje pulsar: około 30 obrotów na sekundę.',
+  rosette: 'Leży w Jednorożcu, około 5 tysięcy lat świetlnych stąd. Gromada gorących gwiazd w środku wydmuchała w niej dziurę.',
+  horse: 'To ciemny obłok pyłu na tle świecącego wodoru. Zauważyła ją w 1888 roku Williamina Fleming na szklanej kliszy fotograficznej.',
+  venus: 'Ma fazy jak Księżyc, co zauważył już Galileusz. Obraca się tak wolno, że dzień na Wenus trwa dłużej niż jej rok.',
+  mizar: 'Dawny test wzroku: kto widzi Alkora obok Mizara, ma dobre oczy. Sam Mizar w teleskopie rozdziela się na kolejną parę gwiazd.',
+  m44: 'Znana już w starożytności jako mglista plamka w Raku. Galileusz pierwszy rozdzielił ją teleskopem na pojedyncze gwiazdy.',
+  m3: 'Około pół miliona gwiazd, 34 tysiące lat świetlnych stąd. Ma wyjątkowo dużo gwiazd zmiennych, które pulsują jak latarnie.',
+  m81: 'Para odległa o 12 milionów lat świetlnych. Przyciąganie większej M81 wywołało w M82 gwałtowną burzę narodzin gwiazd.',
+  m51: 'Pierwsza galaktyka, w której dostrzeżono spiralę: lord Rosse w 1845 roku. Mniejsza towarzyszka ciągnie ją grawitacją za jedno z ramion.',
+  m104: 'Ciemny pas pyłu przecina ją jak rondo kapelusza. W środku siedzi czarna dziura o masie około miliarda Słońc.',
+  leo3: 'M65, M66 i NGC 3628, około 35 milionów lat świetlnych stąd. Wszystkie trzy mieszczą się w jednym polu widzenia teleskopu.',
+  m101: 'Większa od Drogi Mlecznej: około 170 tysięcy lat świetlnych średnicy. Widzimy ją dokładnie z góry, jak wiatraczek.',
+  markarian: 'Fragment Gromady w Pannie, ponad 50 milionów lat świetlnych stąd. Co najmniej siedem galaktyk tego łańcucha porusza się razem.',
+  albireo: 'Głowa Łabędzia. Kontrast złotej i niebieskiej gwiazdy to jedna z najładniejszych par na niebie.',
+  hanger: 'Oficjalnie Collinder 399, zwana też Gromadą Brocchiego. To nie prawdziwa gromada, tylko przypadkowy układ gwiazd w różnych odległościach.',
+  m13: 'Kilkaset tysięcy gwiazd, 22 tysiące lat świetlnych stąd. W 1974 roku z radioteleskopu Arecibo wysłano w jej stronę wiadomość do obcych.',
+  m11: 'Jedna z najgęstszych gromad otwartych: prawie 3 tysiące gwiazd. Nazwę zawdzięcza kształtowi klucza lecących kaczek.',
+  m57: 'Gaz odrzucony przez umierającą gwiazdę podobną do Słońca. W środku został po niej biały karzeł.',
+  m27: 'Pierwsza odkryta mgławica planetarna: Charles Messier, 1764 rok. Świeci na zielonkawo dzięki tlenowi.',
+  m17: 'Jedna z najjaśniejszych wylęgarni gwiazd w Drodze Mlecznej, około 5500 lat świetlnych stąd. Bywa też nazywana Łabędziem.',
+  m8: 'Z ciemnego miejsca widać ją gołym okiem. Leży w Strzelcu, kilka tysięcy lat świetlnych stąd, a przecina ją ciemny pas pyłu: tytułowa laguna.',
+  m16: 'To tutaj teleskop Hubble’a sfotografował Filary Stworzenia. Leży w Wężu, około 6500 lat świetlnych stąd.',
+  veil: 'Strzępy gwiazdy, która wybuchła kilkanaście tysięcy lat temu. Cała pętla jest na niebie szersza niż sześć Księżyców w pełni.',
+};
+for (const o of OBJECTS) o.fact = FACTS[o.id] || '';
+
+// Rozmowy z gośćmi na tarasie (po kolei, przy kolejnych wizytach)
+export const TALKS = {
+  lady: ['Mój Stefan miał lunetę z mosiądzu. Sprzedałam ją po jego śmierci i żałuję do dziś. Dobrze, że ktoś tu znowu patrzy w górę.', 'Wiesz, że ta ulica nazywała się kiedyś Gwiezdna? Zmienili, bo listonosz mylił z Gwiaździstą.', 'Przyniosłam Ci słoik konfitur. Ten na płocie niech zostanie dla kota.', 'Jak byłam mała, podczas zaciemnienia widziałam Drogę Mleczną z samego rynku. Myślałam, że już jej nie zobaczę.'],
+  kid: ['A wiesz, że na Saturnie pada deszcz z diamentów? Pani mówi, że to tylko hipoteza. Co to hipoteza?', 'Jak dorosnę, będę astronautą. Albo kotem. Jeszcze nie wiem.', 'Narysowałem Twój taras. Pies wyszedł jak ziemniak, ale teleskop jest dobry.', 'Tata mówi, że kometa przyleci w wakacje. Mogę wtedy przyjść? Nawet jak będzie bardzo późno?'],
+  gardener: ['Te lampy z czujnikiem to żona kazała. Na złodziei. Jedyny, kogo złapały, to jeż.', 'Ogród nocą pachnie inaczej. Nie wiedziałem, bo zawsze świeciłem sobie w oczy.', 'Przyniosłem pomidory. Nie dziękuj, bo i tak nie mam co z nimi robić.', 'Pokazałem zdjęcie szwagrowi. Powiedział, że to z internetu. To mu powiedziałem, żeby przyjechał i sam zobaczył.'],
+  student: ['Studiuję fizykę, ale na wykładach nikt nie każe patrzeć w niebo. Trochę absurd.', 'Po sesji kupię lornetkę. Od czego zacząć? Tylko nie mów, że od Księżyca.', 'Czasem widzę z poddasza, jak machasz latarką do kota. On naprawdę wtedy wraca?', 'Napisałam o Twoich zdjęciach w pracy zaliczeniowej o zanieczyszczeniu światłem. Dostałam piątkę.'],
+  couple: ['Poznaliśmy się na obozie żeglarskim. Jan udawał, że zna gwiazdozbiory. Znał jeden.', 'Wielki Wóz. Znałem Wielki Wóz. I to wystarczyło.', 'Girlandy wiszą teraz w sypialni. Na płocie i tak mrugały tylko nam w okno.', 'Na rocznicę chcemy tu przyjść z termosem. Kometa byłaby miłym dodatkiem, ale nie wymagamy.'],
+};
+
+// Dziennik: jedno zdanie o świcie po każdej nocy (pora roku x noc)
+export const DIARY = [
+  ['Pierwsza noc w nowym domu. Kartony stoją nierozpakowane, ale teleskop już nie.', 'Ktoś z naprzeciwka pomachał mi rano z ganku. Odmachałam.', 'Kot wrócił z papierkiem przy obroży. Więc tak tu się rozmawia.', 'Okolica świeci jak lotnisko. Mimo to coś widać.', 'Pan od ogrodu twierdzi, że w mieście nic nie widać. Wyzwanie przyjęte.', 'Pierwszy raz ktoś zgasił dla mnie światło. Dziwne uczucie.', 'Liście lecą na taras. Pies uważa, że to jego zasługa.', 'W sklepie pani zapytała, czy to ja „od tych gwiazd”. Chyba tak.', 'Zimno w palce. Kupić rękawiczki bez palców.', 'Niebo jest o ton ciemniejsze niż we wrześniu. Albo mi się wydaje.', 'Kot śpi w kartonie po teleskopie. Pies udaje, że go nie widzi.', 'Koniec jesieni. Znam już trzy osoby i jednego jeża.'],
+  ['Pierwszy szron na poręczy. Koc ma teraz dwie warstwy.', 'Na poddaszu naprzeciwko do rana pali się lampa. Ktoś też nie śpi.', 'Herbata stygnie szybciej, niż ją piję.', 'Orion stoi nad dachami jak sąsiad, który przyszedł bez zaproszenia.', 'Pies ogrzewa mi stopy. Twierdzi, że to przypadek.', 'Śnieg odbija światło lamp. Ciekawe, czy dałoby się je zgasić wszystkie.', 'Na ulicy cisza taka, że słychać, jak mruga gwiazda.', 'Ktoś zostawił na progu rękawiczki bez palców. Bez liściku.', 'Spadające gwiazdy liczyliśmy we troje: ja, pies i termos.', 'Dni są krótkie, więc noce mam prawie dla siebie.', 'Kot przyniósł liścik z odciskiem łapy. Chyba własnej.', 'Koniec zimy. W kilku oknach jest już ciemno i wcale nie jest smutno.'],
+  ['Pachnie ziemią. Pan Ryszard kopie grządki o siódmej rano.', 'Pierwszy raz ktoś usiadł obok mnie na tarasie.', 'W sklepie mówią, że latem przyleci kometa.', 'Galaktyki są blade jak oddech na szybie. Trzeba cierpliwości.', 'Antek zapytał, czy gwiazdy się kończą. Powiedziałam, że nie wiem.', 'Dwie nowe osoby na końcu ulicy. Ich płot mruga kolorowo.', 'Księżyc zrobił się miedziany i przez chwilę było naprawdę ciemno.', 'Na tarasie stoi już więcej kubków niż moich.', 'Pies nauczył się, że goście oznaczają okruszki.', 'Ola przyniosła lornetkę. Krzyczała na Jowisza.', 'Kot i pies leżą metr od siebie. Postęp.', 'Koniec wiosny. O komecie mówi już cała ulica.'],
+  ['Noce są krótkie i ciepłe. Koc bardziej dla zasady.', 'Droga Mleczna stoi nad tarasem. Rok temu nie było jej widać.', 'Pani Helena przyniosła szarlotkę i krzesło. Zostaje.', 'Leżaki sąsiadów stoją u mnie na stałe. Niech stoją.', 'Świerszcze. Tyle świerszczy.', 'Ktoś zapytał, czy mogą zgasić latarnię na rogu. Podobno się da.', 'Antek zasnął na leżaku z lornetką na brzuchu.', 'Pan Ryszard mówi, że niebo jest „niczego sobie”. To u niego owacja.', 'Kometę widać już w lornetce. Mały kłębek.', 'Wszyscy pytają, o której przyjść. Mówię: jak zrobi się ciemno.', 'Jutro. Upiekłam ciasto, pierwszy raz w tym domu.', 'Rok temu nie znałam tu nikogo.'],
+];
+
+// Gwiazdozbiory rysowane liniami w tle nieba (współrzędne sceny), po dwa na porę roku
+export const CONSTELLATIONS = [
+  [{ name: 'Kasjopeja', pts: [[16, 62], [26, 74], [35, 64], [45, 76], [54, 66]], edges: [[0, 1], [1, 2], [2, 3], [3, 4]] },
+   { name: 'Pegaz', pts: [[98, 84], [124, 78], [130, 104], [104, 110], [84, 72], [72, 78]], edges: [[0, 1], [1, 2], [2, 3], [3, 0], [0, 4], [4, 5]] }],
+  [{ name: 'Orion', pts: [[36, 58], [60, 54], [44, 76], [49, 75], [54, 74], [34, 98], [64, 94], [48, 44]], edges: [[0, 1], [0, 2], [1, 4], [2, 3], [3, 4], [2, 5], [4, 6], [0, 7], [1, 7]] },
+   { name: 'Bliźnięta', pts: [[108, 50], [114, 70], [118, 92], [124, 46], [132, 66], [140, 86]], edges: [[0, 1], [1, 2], [3, 4], [4, 5], [0, 3], [1, 4]] }],
+  [{ name: 'Wielki Wóz', pts: [[14, 66], [28, 60], [40, 64], [52, 72], [54, 88], [72, 90], [74, 74]], edges: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 3]] },
+   { name: 'Lew', pts: [[104, 62], [112, 54], [120, 58], [118, 70], [106, 76], [140, 84], [150, 76]], edges: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 3]] }],
+  [{ name: 'Łabędź', pts: [[58, 44], [63, 62], [68, 80], [74, 102], [42, 70], [88, 54]], edges: [[0, 1], [1, 2], [2, 3], [4, 1], [1, 5]] },
+   { name: 'Lutnia', pts: [[122, 56], [126, 68], [134, 70], [132, 84], [124, 82]], edges: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 1]] }],
+];

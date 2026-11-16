@@ -23,3 +23,13 @@ Potem otwórz http://localhost:8123. Na telefonie: wrzuć folder na GitHub Pages
 - `src/NightScene.js` – noc: plan 8 bloków, prognoza, liściki
 - `src/DevelopScene.js` – minigierki wywoływania zdjęć
 - `src/AlbumScene.js` – album z naklejkami
+- `src/ScanScene.js` – skanowanie nieba
+- `src/DawnScene.js` – świt między nocami
+
+## Opis projektu
+
+Pełny opis gry (zasady, zawartość, wygląd, rzeczy otwarte) jest w `docs/opis-projektu.pdf`. Po każdej zmianie w grze zaktualizuj tekst w `tools/make_doc.py` i uruchom:
+
+```bash
+python3 tools/make_doc.py
+```

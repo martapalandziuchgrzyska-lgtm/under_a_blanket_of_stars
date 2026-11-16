@@ -215,23 +215,23 @@ const W0 = '#2a1826', W1 = '#4a2c38', W2 = '#6e4240', W3 = '#96654c', W4 = '#c08
 
 export function buildWorld(scene) {
   // --- niebo
-  mk(scene, 'sky', 360, 320, c => grad(c, 360, 320, ['#07081f', '#0a0b2a', '#0e0f38', '#141447', '#1b1958', '#251f6b', '#31267c', '#412c88', '#53338e'], 1.15));
-  mk(scene, 'pollution', 360, 320, c => {
-    for (let y = 90; y < 320; y++) for (let x = 0; x < 360; x++) {
-      const f = ((y - 90) / 230) ** 1.5, a = Math.floor(f * 6 + bay(x, y)) / 6 * 0.7; if (a <= 0) continue;
+  mk(scene, 'sky', 360, 400, c => grad(c, 360, 400, ['#07081f', '#0a0b2a', '#0e0f38', '#141447', '#1b1958', '#251f6b', '#31267c', '#412c88', '#53338e'], 1.15));
+  mk(scene, 'pollution', 360, 400, c => {
+    for (let y = 150; y < 400; y++) for (let x = 0; x < 360; x++) {
+      const f = ((y - 150) / 250) ** 1.5, a = Math.floor(f * 6 + bay(x, y)) / 6 * 0.7; if (a <= 0) continue;
       R(c, `rgba(${150 + f * 85 | 0},${80 + f * 60 | 0},${150 - f * 90 | 0},${a})`, x, y);
     }
   });
   const r = rng(42);
-  mk(scene, 'stars3', 720, 300, c => { for (let i = 0; i < 620; i++) { const col = STARC[Math.floor(r() * 4)]; R(c, `rgba(${col[0]},${col[1]},${col[2]},${0.2 + r() * 0.4})`, r() * 720 | 0, (r() ** 1.15) * 296 | 0); } });
-  mk(scene, 'stars2', 720, 300, c => { for (let i = 0; i < 190; i++) { const col = STARC[Math.floor(r() * 4)], x = r() * 716 | 0, y = (r() ** 1.2) * 294 | 0; R(c, `rgba(${col[0]},${col[1]},${col[2]},${0.55 + r() * 0.4})`, x, y); if (r() < 0.18) sparkle(c, x, y, 1); } });
-  mk(scene, 'stars1', 720, 300, c => { for (let i = 0; i < 44; i++) { const x = 8 + r() * 704 | 0, y = 8 + (r() ** 1.3) * 280 | 0; if (i < 14) sparkle(c, x, y, 3 + (r() * 3 | 0)); else { R(c, '#ffffff', x, y, 2, 2); sparkle(c, x, y, 1); } } });
-  mk(scene, 'milky', 720, 300, c => {
-    const b = new Buf(720, 300), q = rng(5);
-    for (let i = 0; i < 150; i++) { const s = i / 149, x = 50 + s * 620, y = 150 + Math.sin(s * 6.283) * 78 + gauss(q) * 16; b.glow(x + gauss(q) * 10, y, 16 + q() * 18, 9 + q() * 9, Math.cos(s * 6.283) * 0.8, q() < 0.3 ? [150, 120, 230] : [110, 130, 235], 0.06 + q() * 0.07); }
-    for (let i = 0; i < 16; i++) { const s = q(), x = 50 + s * 620, y = 150 + Math.sin(s * 6.283) * 78 + gauss(q) * 10; b.glow(x, y, 7 + q() * 6, 5 + q() * 4, q() * 3, [170, 180, 255], 0.22); }
+  mk(scene, 'stars3', 720, 380, c => { for (let i = 0; i < 780; i++) { const col = STARC[Math.floor(r() * 4)]; R(c, `rgba(${col[0]},${col[1]},${col[2]},${0.2 + r() * 0.4})`, r() * 720 | 0, (r() ** 1.15) * 376 | 0); } });
+  mk(scene, 'stars2', 720, 380, c => { for (let i = 0; i < 240; i++) { const col = STARC[Math.floor(r() * 4)], x = r() * 716 | 0, y = (r() ** 1.2) * 374 | 0; R(c, `rgba(${col[0]},${col[1]},${col[2]},${0.55 + r() * 0.4})`, x, y); if (r() < 0.18) sparkle(c, x, y, 1); } });
+  mk(scene, 'stars1', 720, 380, c => { for (let i = 0; i < 54; i++) { const x = 8 + r() * 704 | 0, y = 8 + (r() ** 1.3) * 360 | 0; if (i < 14) sparkle(c, x, y, 3 + (r() * 3 | 0)); else { R(c, '#ffffff', x, y, 2, 2); sparkle(c, x, y, 1); } } });
+  mk(scene, 'milky', 720, 380, c => {
+    const b = new Buf(720, 380), q = rng(5);
+    for (let i = 0; i < 150; i++) { const s = i / 149, x = 50 + s * 620, y = 190 + Math.sin(s * 6.283) * 96 + gauss(q) * 16; b.glow(x + gauss(q) * 10, y, 16 + q() * 18, 9 + q() * 9, Math.cos(s * 6.283) * 0.8, q() < 0.3 ? [150, 120, 230] : [110, 130, 235], 0.06 + q() * 0.07); }
+    for (let i = 0; i < 16; i++) { const s = q(), x = 50 + s * 620, y = 190 + Math.sin(s * 6.283) * 96 + gauss(q) * 10; b.glow(x, y, 7 + q() * 6, 5 + q() * 4, q() * 3, [170, 180, 255], 0.22); }
     putD(b, c, 5);
-    for (let i = 0; i < 420; i++) { const s = q(); R(c, `rgba(225,230,255,${0.3 + q() * 0.5})`, 50 + s * 620 + gauss(q) * 26 | 0, 150 + Math.sin(s * 6.283) * 78 + gauss(q) * 20 | 0); }
+    for (let i = 0; i < 420; i++) { const s = q(); R(c, `rgba(225,230,255,${0.3 + q() * 0.5})`, 50 + s * 620 + gauss(q) * 26 | 0, 190 + Math.sin(s * 6.283) * 96 + gauss(q) * 20 | 0); }
   });
   // płaskie chmurki nad horyzontem
   mk(scene, 'pclouds', 720, 150, c => {
@@ -433,13 +433,16 @@ export function buildWorld(scene) {
   mk(scene, 'smudge', 24, 24, c => { const b = new Buf(24, 24); b.glow(12, 12, 6, 5, 0.5, [150, 165, 240], 0.75); putD(b, c, 4); R(c, 'rgba(230,235,255,0.8)', 12, 12); });
   mk(scene, 'ic_scan', 12, 12, c => { for (let a = 0; a < 6.3; a += 0.2) R(c, PAL.warm1, 5.5 + Math.cos(a) * 4.5, 5.5 + Math.sin(a) * 4.5); R(c, PAL.warm0, 5, 3, 1, 5); R(c, PAL.warm0, 3, 5, 5, 1); R(c, PAL.white, 5, 5); });
   mk(scene, 'comet_sky', 140, 60, c => { const b = new Buf(140, 60); for (let s = 0; s < 120; s++) b.glow(16 + s, 44 - s * 0.3, 2 + s * 0.08, 2 + s * 0.08, 0, [170, 215, 255], 0.3 * (1 - s / 124)); b.glow(16, 44, 4, 4, 0, [235, 255, 248], 1.8); putD(b, c, 5); sparkle(c, 16, 44, 5); });
-  for (let p = 0; p < 7; p++) mk(scene, 'moonph' + p, 22, 22, c => {
-    if (p === 0 || p === 6) return;
-    const sh = [0, -13, -8, 99, 8, 13, 0][p];
-    for (let y = -10; y <= 10; y++) for (let x = -10; x <= 10; x++) {
-      if (x * x + y * y > 105 || (sh !== 99 && (x - sh) ** 2 + y * y <= 118)) continue;
-      const crater = [[-3, -3, 3], [3, 2, 2], [-2, 5, 2], [5, -5, 2]].some(([a, b2, rr]) => (x - a) ** 2 + (y - b2) ** 2 <= rr * rr);
-      R(c, crater ? '#c4c6dc' : x + y < -9 ? '#ffffff' : '#eef0f8', x + 11, y + 11);
+  // Księżyc w 12 fazach (noc 0 = nów, 6 = pełnia); terminator to elipsa
+  for (let p = 0; p < 12; p++) mk(scene, 'moon' + p, 28, 28, c => {
+    if (p === 0) return;
+    const a = p / 12 * Math.PI * 2, k = Math.cos(a), R2 = 13;
+    for (let y = -R2; y <= R2; y++) for (let x = -R2; x <= R2; x++) {
+      if (x * x + y * y > R2 * R2 + 4) continue;
+      const w = Math.sqrt(Math.max(0, R2 * R2 - y * y)), lit = p < 6 ? x >= k * w : x <= -k * w;
+      if (!lit) { if (bay(x + 20, y + 20) < 0.25) R(c, 'rgba(120,130,190,0.35)', x + 14, y + 14); continue; } // popielate światło
+      const crater = [[-4, -4, 4], [4, 2, 3], [-3, 6, 3], [6, -6, 2], [0, -9, 2], [-8, 1, 2]].some(([cx, cy, rr]) => (x - cx) ** 2 + (y - cy) ** 2 <= rr * rr);
+      R(c, crater ? '#c2c5dc' : x + y < -11 ? '#ffffff' : x + y > 12 ? '#dfe2f0' : '#eef0f8', x + 14, y + 14);
     }
   });
   // ikonki prognozy 12x12

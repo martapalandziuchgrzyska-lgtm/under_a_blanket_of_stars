@@ -2,7 +2,7 @@
 import Phaser from '../lib/phaser.esm.min.js';
 import { OBJ, SEASONS, TYPES, FEATS, GIFTS, seasonObjects } from './data.js';
 import { S, ost, paste, season } from './state.js';
-import { W, H, setupCam, txt, button, toast, dialog } from './ui.js';
+import { W, H, setupCam, txt, button, toast, dialog, overlay, panel } from './ui.js';
 
 const COLS = 4, CW = 84, CH = 106, X0 = 54, Y0 = 130;
 
@@ -46,7 +46,7 @@ export class AlbumScene extends Phaser.Scene {
         txt(this, p.x, p.y + 40, o.lvl > 1 ? `poziom ${o.lvl}` : '?', { size: 9, ox: 0.5, color: '#a89878' });
       }
     });
-    this.info.setText(this.pasteId ? '' : 'Stuknij zdjęcie, żeby przeczytać notatkę.');
+    this.info.setText(this.pasteId ? '' : 'Stuknij zdjęcie, żeby przeczytać ciekawostkę.');
   }
 
   sticker(o, x, y, a, interactive = true) {
@@ -56,8 +56,24 @@ export class AlbumScene extends Phaser.Scene {
     c.add(txt(this, 0, 29, '★'.repeat(a.stars), { size: 8, ox: 0.5, oy: 0.5, color: '#ffc65a' }));
     c.add(txt(this, 0, 41, o.short, { size: 8, ox: 0.5, color: '#4a3238' }));
     c.setRotation(((o.id.charCodeAt(0) + o.id.length) % 7 - 3) * 0.012);
-    if (interactive) { fr.setInteractive(); fr.on('pointerdown', () => this.info.setText(`${o.name}\n${TYPES[o.type].label} · ${o.note}`)); }
+    if (interactive) { fr.setInteractive(); fr.on('pointerdown', () => this.card(o, a)); }
     return c;
+  }
+
+  // Karta zdjęcia: duży kadr, notatka i ciekawostka
+  card(o, a) {
+    if (this.pasteId) return;
+    const ov = overlay(this, 300, 0.86);
+    const body = txt(this, W / 2, 0, `${o.note}\n\n${o.fact}`, { size: 12, wrap: 268, ox: 0.5, ls: 4 });
+    const h = body.height + 262, y0 = H / 2 - h / 2;
+    ov.add(panel(this, W / 2, H / 2, 304, h));
+    ov.add(txt(this, W / 2, y0 + 14, o.name, { size: 14, ox: 0.5, color: '#ffc65a', style: '800', wrap: 280, align: 'center' }));
+    ov.add(this.add.rectangle(W / 2, y0 + 118, 136, 136, a.gold ? 0xffc65a : 0xf6ead0).setRounded(6));
+    ov.add(this.add.rectangle(W / 2, y0 + 118, 126, 126, 0x05060f));
+    ov.add(this.add.image(W / 2, y0 + 118, 'obj_' + o.id).setScale(2.5));
+    ov.add(txt(this, W / 2, y0 + 192, `${'★'.repeat(a.stars)}${'☆'.repeat(3 - a.stars)}  ·  ${TYPES[o.type].label}  ·  poziom ${o.lvl}`, { size: 11, ox: 0.5, color: '#aab4d0' }));
+    body.setY(y0 + 212); ov.add(body);
+    ov.add(button(this, W / 2, y0 + h - 24, 140, 30, 'Zamknij', () => ov.destroy()).c);
   }
 
   featPage() {

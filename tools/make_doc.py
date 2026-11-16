@@ -42,7 +42,7 @@ BODY = f"""
 <li>Sterowanie: stuknięcia i przeciąganie.</li>
 <li>Zapis: localStorage, po każdej godzinie. Zmiana formatu zapisu resetuje postęp (gra jest w budowie).</li>
 <li>Grafika: w całości rysowana kodem do tekstur (src/art.js), do podmiany na sprite'y pod tymi samymi kluczami.</li>
-<li>Dźwięk: muzyka i efekty syntezowane w przeglądarce (Web Audio, src/audio.js), bez plików. Startuje po pierwszym dotknięciu ekranu; przycisk ♪ wycisza (zapamiętywane).</li>
+<li>Dźwięk: muzyka i efekty syntezowane w przeglądarce (Web Audio, src/audio.js), bez plików. Startuje po pierwszym dotknięciu ekranu (na iPhonie odblokowuje go dopiero puszczenie palca). Strona ustawia sesję audio na „odtwarzanie”, więc gra gra także przy włączonym przełączniku wyciszenia; głośność zależy od przycisków głośności telefonu. Przycisk ♪ wycisza (zapamiętywane). Wbudowany dźwięk Phasera jest wyłączony.</li>
 <li>Fonty: Nunito (interfejs, tytuł) i Patrick Hand (liściki, dziennik) z Google Fonts.</li>
 </ul>
 

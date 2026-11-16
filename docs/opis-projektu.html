@@ -1,6 +1,6 @@
 <!doctype html><html lang='pl'><head><meta charset='utf-8'><title>Under a Blanket of Stars: opis projektu</title><style>body{font-family:'Helvetica Neue',Arial,sans-serif;font-size:10.5pt;line-height:1.45;color:#1c1c2a;margin:0}h1{font-size:22pt;margin:0 0 2pt}h2{font-size:13pt;margin:16pt 0 4pt;color:#2a2f7a;border-bottom:1px solid #c8cbe8;padding-bottom:2pt}.meta{color:#666;font-size:9pt;margin-top:0}table{border-collapse:collapse;width:100%;font-size:8.5pt;margin:6pt 0}th,td{border:1px solid #c8cbe8;padding:3pt 5pt;text-align:left;vertical-align:top}th{background:#eceefa}tr{break-inside:avoid}ul{margin:4pt 0;padding-left:16pt}li{margin:1.5pt 0}@page{size:A4;margin:16mm 15mm}</style></head><body>
 <h1>Under a Blanket of Stars</h1>
-<p class="meta">Opis projektu gry · stan na 2026-11-16 · dokument generowany z kodu (tools/make_doc.py)</p>
+<p class="meta">Opis projektu gry · stan na 2026-11-17 · dokument generowany z kodu (tools/make_doc.py)</p>
 
 <h2>1. W skrócie</h2>
 <p>Cozy gra pixel-art na telefon (pion) o obserwowaniu nocnego nieba z tarasu. Bohaterka okryta kocem w gwiazdki co noc planuje 8 godzin: namierza obiekty skanowaniem, zbiera ich światło teleskopem, wywołuje zdjęcia w dotykowych minigierkach i wkleja je do albumu. Kot nosi liściki od sąsiadów, czekoladowy labrador leży obok. Każdy zaprzyjaźniony sąsiad gasi swoje światło, więc niebo ciemnieje i odsłania słabsze obiekty, aż do komety w finale lata.</p>
@@ -14,7 +14,7 @@
 <li>Sterowanie: stuknięcia i przeciąganie.</li>
 <li>Zapis: localStorage, po każdej godzinie. Zmiana formatu zapisu resetuje postęp (gra jest w budowie).</li>
 <li>Grafika: w całości rysowana kodem do tekstur (src/art.js), do podmiany na sprite'y pod tymi samymi kluczami.</li>
-<li>Dźwięk: muzyka i efekty syntezowane w przeglądarce (Web Audio, src/audio.js), bez plików. Startuje po pierwszym dotknięciu ekranu; przycisk ♪ wycisza (zapamiętywane).</li>
+<li>Dźwięk: muzyka i efekty syntezowane w przeglądarce (Web Audio, src/audio.js), bez plików. Startuje po pierwszym dotknięciu ekranu (na iPhonie odblokowuje go dopiero puszczenie palca). Strona ustawia sesję audio na „odtwarzanie”, więc gra gra także przy włączonym przełączniku wyciszenia; głośność zależy od przycisków głośności telefonu. Przycisk ♪ wycisza (zapamiętywane). Wbudowany dźwięk Phasera jest wyłączony.</li>
 <li>Fonty: Nunito (interfejs, tytuł) i Patrick Hand (liściki, dziennik) z Google Fonts.</li>
 </ul>
 

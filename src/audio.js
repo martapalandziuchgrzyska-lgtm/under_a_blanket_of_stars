@@ -1,5 +1,7 @@
 // Muzyka i efekty generowane w przeglądarce (Web Audio), bez plików dźwiękowych.
-// Dźwięk rusza dopiero po pierwszym dotknięciu ekranu, bo tak wymagają przeglądarki.
+// Dźwięk rusza dopiero po dotknięciu ekranu, bo tak wymagają przeglądarki. Na iPhonie odblokowuje go
+// dopiero `touchend`/`click` (nie `pointerdown`), a przełącznik wyciszenia ucisza Web Audio, chyba że
+// strona ustawi sesję audio na „playback” (navigator.audioSession albo grający element <audio>).
 const MUTE_KEY = 'pod_kocem_gwiazd_mute';
 let ctx = null, master = null, music = null, fx = null, noiseBuf = null, timer = null, nextChord = 0, chordNo = 0;
 let muted = false;
@@ -19,15 +21,30 @@ export function toggleMute() {
   return muted;
 }
 
-export function initAudio() {
-  if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
+// Krótki plik WAV z ciszą: grający element <audio> przełącza iOS w tryb odtwarzania mediów,
+// więc gra słychać także przy włączonym przełączniku wyciszenia.
+function silentWav() {
+  const n = 2400, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+  const str = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+  str(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); str(8, 'WAVE'); str(12, 'fmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, 24000, true);
+  v.setUint32(28, 48000, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); str(36, 'data'); v.setUint32(40, n * 2, true);
+  return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+}
+let keepAlive = null;
+
+function build() {
   const AC = window.AudioContext || window.webkitAudioContext;
-  if (!AC) return;
-  try { ctx = new AC(); } catch { return; }
-  master = ctx.createGain(); master.gain.value = muted ? 0 : 1; master.connect(ctx.destination);
-  fx = ctx.createGain(); fx.gain.value = 0.5; fx.connect(master);
+  if (!AC) return false;
+  try { ctx = new AC(); } catch { return false; }
+  master = ctx.createGain(); master.gain.value = muted ? 0 : 1;
+  // kompresor podnosi ciche partie, żeby było słychać z głośnika telefonu
+  const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -24; comp.ratio.value = 4;
+  const out = ctx.createGain(); out.gain.value = 1.6;
+  master.connect(comp); comp.connect(out); out.connect(ctx.destination);
+  fx = ctx.createGain(); fx.gain.value = 0.6; fx.connect(master);
   // muzyka przechodzi przez filtr i pogłos z opóźnienia
-  music = ctx.createGain(); music.gain.value = 0.42;
+  music = ctx.createGain(); music.gain.value = 0.55;
   const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1500;
   const delay = ctx.createDelay(1); delay.delayTime.value = 0.42;
   const fb = ctx.createGain(); fb.gain.value = 0.38;
@@ -36,7 +53,33 @@ export function initAudio() {
   const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
   nextChord = ctx.currentTime + 0.3;
   timer = setInterval(schedule, 400);
+  return true;
+}
+
+// Wołane przy każdym dotknięciu, dopóki dźwięk nie ruszy (musi być w obsłudze gestu użytkownika).
+export function initAudio() {
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch { /* starsze przeglądarki */ }
+  if (!ctx && !build()) return;
+  if (ctx.state !== 'running') ctx.resume().catch(() => {});
+  // pusty dźwięk odtworzony w geście użytkownika odblokowuje kontekst na starszych iOS
+  try { const b = ctx.createBuffer(1, 1, 22050), src = ctx.createBufferSource(); src.buffer = b; src.connect(ctx.destination); src.start(0); } catch { /* nic */ }
+  if (!keepAlive) {
+    try { keepAlive = new Audio(silentWav()); keepAlive.loop = true; keepAlive.setAttribute('playsinline', ''); keepAlive.volume = 0.01; } catch { keepAlive = null; }
+  }
+  if (keepAlive && keepAlive.paused) keepAlive.play().catch(() => {});
   schedule();
+}
+export const audioRunning = () => !!ctx && ctx.state === 'running';
+
+const UNLOCK = ['touchend', 'click', 'pointerup', 'keydown'];
+function onGesture() { initAudio(); if (audioRunning() && keepAlive && !keepAlive.paused) UNLOCK.forEach(e => window.removeEventListener(e, onGesture, true)); }
+export function setupAudio() {
+  UNLOCK.forEach(e => window.addEventListener(e, onGesture, true));
+  // po powrocie do karty iOS zawiesza kontekst: wznawiamy przy następnym dotknięciu
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { if (ctx) ctx.suspend().catch(() => {}); if (keepAlive) keepAlive.pause(); }
+    else UNLOCK.forEach(e => window.addEventListener(e, onGesture, true));
+  });
 }
 
 function voice(dest, freq, t, dur, type, vol, attack, release) {

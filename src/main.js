@@ -9,7 +9,7 @@ import { AlbumScene } from './AlbumScene.js';
 import { ScanScene } from './ScanScene.js';
 import { DawnScene } from './DawnScene.js';
 import { ConsScene } from './ConsScene.js';
-import { initAudio, toggleMute, isMuted } from './audio.js';
+import { setupAudio, toggleMute, isMuted } from './audio.js';
 import { W, H, PY, setupCam, txt, button, dialog } from './ui.js';
 
 class TitleScene extends Phaser.Scene {
@@ -39,7 +39,7 @@ await Promise.race([
 ]);
 
 // przeglądarki pozwalają grać dźwięk dopiero po dotknięciu ekranu
-window.addEventListener('pointerdown', initAudio);
+setupAudio();
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,
@@ -47,6 +47,7 @@ const game = new Phaser.Game({
   width: W * 2, height: H * 2,
   backgroundColor: '#070a18',
   pixelArt: true,
+  audio: { noAudio: true }, // dźwięk robi src/audio.js; drugi kontekst audio przeszkadza na iOS
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
   scene: [TitleScene, NightScene, DevelopScene, AlbumScene, ScanScene, DawnScene, ConsScene],
 });

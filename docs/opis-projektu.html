@@ -3,63 +3,70 @@
 <p class="meta">Opis projektu gry · stan na 2026-11-16 · dokument generowany z kodu (tools/make_doc.py)</p>
 
 <h2>1. W skrócie</h2>
-<p>Cozy gra pixel-art na telefon (pion) o obserwowaniu nocnego nieba z tarasu. Bohaterka zawinięta w koc w gwiazdki co noc planuje 8 bloków czasu: szuka obiektów, zbiera ich światło teleskopem, wywołuje zdjęcia w dotykowych minigierkach i wkleja je do albumu. Kot nosi liściki od sąsiadów, pies leży obok. Każdy zaprzyjaźniony sąsiad gasi swoje światło, więc niebo ciemnieje i odsłania słabsze obiekty, aż do komety w finale lata.</p>
-<p>Zasada nadrzędna: <b>nic nie przepada</b>. Nie ma kar, zebrane światło zostaje na kolejne noce, plan można zmieniać w trakcie nocy.</p>
+<p>Cozy gra pixel-art na telefon (pion) o obserwowaniu nocnego nieba z tarasu. Bohaterka okryta kocem w gwiazdki co noc planuje 8 godzin: namierza obiekty skanowaniem, zbiera ich światło teleskopem, wywołuje zdjęcia w dotykowych minigierkach i wkleja je do albumu. Kot nosi liściki od sąsiadów, czekoladowy labrador leży obok. Każdy zaprzyjaźniony sąsiad gasi swoje światło, więc niebo ciemnieje i odsłania słabsze obiekty, aż do komety w finale lata.</p>
+<p>Zasada nadrzędna: <b>nic nie przepada</b>. Nie ma kar, zebrane światło zostaje na kolejne noce, plan można zmieniać w trakcie nocy. Druga zasada: <b>żadna godzina nie jest martwa</b> – na chmury i jasne niebo są czynności niezależne od pogody.</p>
 
 <h2>2. Platforma i technikalia</h2>
 <ul>
 <li>Silnik: Phaser 4 (4.2.1), czysty JavaScript w modułach ES, bez kroku budowania.</li>
 <li>Hosting: GitHub Pages z gałęzi main (repo under_a_blanket_of_stars).</li>
-<li>Ekran: pionowy, logiczne 360×640; grafika pixel-art w siatce 360 px szerokości, tekst w podwójnej rozdzielczości.</li>
+<li>Ekran: pionowy, rozdzielczość bazowa 360×780 (proporcje nowoczesnych smartfonów). Scena (niebo i taras) zajmuje górne 582 px, pod nią panel z godzinami i przyciskami.</li>
 <li>Sterowanie: stuknięcia i przeciąganie.</li>
-<li>Zapis: localStorage, po każdym bloku. Zmiana formatu zapisu resetuje postęp (gra jest w budowie).</li>
+<li>Zapis: localStorage, po każdej godzinie. Zmiana formatu zapisu resetuje postęp (gra jest w budowie).</li>
 <li>Grafika: w całości rysowana kodem do tekstur (src/art.js), do podmiany na sprite'y pod tymi samymi kluczami.</li>
+<li>Dźwięk: muzyka i efekty syntezowane w przeglądarce (Web Audio, src/audio.js), bez plików. Startuje po pierwszym dotknięciu ekranu; przycisk ♪ wycisza (zapamiętywane).</li>
 <li>Fonty: Nunito (interfejs, tytuł) i Patrick Hand (liściki, dziennik) z Google Fonts.</li>
 </ul>
 
 <h2>3. Struktura czasu</h2>
 <ul>
+<li>Jednostka czasu w grze to <b>godzina</b> (dawniej „blok”). Noc = 8 godzin; odłamek życzenia może ją wydłużyć o jedną.</li>
 <li>Rok = 4 pory roku × 12 nocy = 48 nocy. Po komecie rok zaczyna się od nowa i można dalej uzupełniać album.</li>
-<li>Noc = 8 bloków. Zimą kokon wytrzymuje 6 bloków; herbata i pies (stuknięcie) dodają po jednym. Latem pierwszy i ostatni blok to zmierzch: tylko obiekty poziomu 1.</li>
-<li>Między nocami jest animacja świtu: niebo jaśnieje, wschodzi słońce, przelatują ptaki, a w dzienniku pojawia się jedno zdanie fabuły (48 wpisów, po jednym na noc).</li>
+<li>Zimą kokon wytrzymuje 6 godzin; stuknięcie herbaty na stoliku albo psa dodaje po jednej. Latem pierwsza i ostatnia godzina to zmierzch: tylko obiekty poziomu 1.</li>
+<li>Między nocami jest animacja świtu: niebo jaśnieje, wschodzi słońce, przelatują ptaki (ze śpiewem), a w dzienniku pojawia się jedno zdanie fabuły (48 wpisów).</li>
 </ul>
 
-<h2>4. Blok: co można robić</h2>
-<p>Gracz stuka blok (albo obiekt na niebie, słoik, gościa) i wybiera czynność. Każda zajmuje jeden blok.</p>
+<h2>4. Godzina: co można robić</h2>
+<p>Gracz stuka godzinę (albo obiekt na niebie, słoik, gościa) i wybiera czynność. Każda zajmuje jedną godzinę.</p>
 <table>
 <tr><th>Czynność</th><th>Co daje</th><th>Pogoda</th></tr>
-<tr><td>Zbieranie światła obiektu</td><td>+1 światło (+2 przy bardzo ciemnym niebie: ciemność ≥ poziom + 3)</td><td>czyste niebo; cienka chmura przepuszcza tylko obiekty poziomu 1</td></tr>
-<tr><td>Skanuj niebo</td><td>minigierka „ciepło–zimno”: namierza jeden nieodkryty obiekt</td><td>nie przy chmurach</td></tr>
+<tr><td>Zbieranie światła obiektu</td><td>+1 światło; ×2 przy bardzo ciemnym niebie (ciemność ≥ poziom + 3); ×2 po kalibracji; +1 po herbacie</td><td>czyste niebo; cienka chmura przepuszcza tylko obiekty poziomu 1</td></tr>
+<tr><td>Skanuj niebo</td><td>minigierka „ciepło–zimno”: namierza jeden nieodkryty obiekt. Działa też przy jasnym niebie dla obiektów do poziomu 3 – gracz poznaje cele, zanim może je fotografować</td><td>nie przy chmurach</td></tr>
 <tr><td>Wywołaj zdjęcie</td><td>minigierka zależna od typu obiektu; daje naklejkę albo lepszą odbitkę</td><td>bez znaczenia</td></tr>
+<tr><td>Zaparz herbatę</td><td>następne zbieranie światła: +1</td><td>bez znaczenia</td></tr>
+<tr><td>Wyczyść i skalibruj teleskop</td><td>następne udane zbieranie światła: podwójne</td><td>bez znaczenia</td></tr>
 <tr><td>Przeczytaj liściki</td><td>otwiera wszystkie liściki ze słoika</td><td>bez znaczenia</td></tr>
+<tr><td>Napisz liścik do sąsiada</td><td>kot zanosi i od razu wraca z odpowiedzią (nową prośbą)</td><td>bez znaczenia</td></tr>
 <tr><td>Wyślij zdjęcia kotem</td><td>wysyła wszystkie gotowe zdjęcia, +1 serce u każdego adresata</td><td>bez znaczenia</td></tr>
 <tr><td>Porozmawiaj z gościem</td><td>kwestia fabularna sąsiada, +1 serce (pierwsze 4 rozmowy), raz na noc na gościa</td><td>bez znaczenia</td></tr>
-<tr><td>Księżyc: faza</td><td>naklejka fazy do kolekcji (sierp, pierwsza kwadra, garbaty, pełnia, ostatnia kwadra)</td><td>nie przy chmurach</td></tr>
+<tr><td>Księżyc: faza</td><td>naklejka fazy do kolekcji</td><td>nie przy chmurach</td></tr>
 <tr><td>Wydarzenie (zaćmienie, kometa)</td><td>naklejka wydarzenia</td><td>nie przy chmurach</td></tr>
-<tr><td>Odpoczynek</td><td>nic; pusty blok</td><td>bez znaczenia</td></tr>
+<tr><td>Odpoczynek</td><td>nic; pusta godzina</td><td>bez znaczenia</td></tr>
 </table>
+<p>Poza godzinami, w dowolnej chwili: zapalanie/gaszenie lampek (przycisk i girlanda), łapanie spadających gwiazd, łączenie gwiazdozbiorów na Mapie Nieba w albumie.</p>
 
-<h2>5. Prognoza</h2>
+<h2>5. Prognoza i pogoda</h2>
 <ul>
-<li>Ikonka nad każdym blokiem: czysto / może być chmura / raczej chmury. Bez procentów.</li>
-<li>Dwa najbliższe bloki mają prognozę ostateczną, dalsze mogą się jeszcze przesunąć o jeden stopień.</li>
-<li>Pogoda rozstrzyga się dopiero w bloku: czysto, cienka chmura albo chmury. Przy „raczej chmury” jest ok. 22% szans na czyste niebo (naklejka „Łut szczęścia”).</li>
+<li>Ikonka nad każdą godziną: czysto / może być chmura / raczej chmury. Bez procentów.</li>
+<li>Dwie najbliższe godziny mają prognozę ostateczną, dalsze mogą się jeszcze przesunąć o jeden stopień.</li>
+<li>Pogoda rozstrzyga się dopiero w godzinie: czysto, cienka chmura albo chmury. Przy „raczej chmury” jest ok. 22% szans na czyste niebo (naklejka „Łut szczęścia”).</li>
+<li><b>Ochrona przed serią chmur:</b> po dwóch pochmurnych godzinach z rzędu trzecia jest czysta (60%) albo z cienką chmurą (40%).</li>
 </ul>
 
 <h2>6. Ciemność nieba</h2>
-<p>Ciemność = 2 + liczba zgaszonych świateł sąsiadów, −1 gdy palą się lampki na tarasie, −1 w noce wokół pełni (noce 4–6 każdej pory), minimum 1. Obiekt wymaga ciemności równej swojemu poziomowi (1–4). Zaćmienie Księżyca na dwa bloki znosi karę za pełnię.</p>
-<p>Lampki to wybór: zapalone dają jeden liścik więcej na noc i gości na tarasie, zgaszone dają ciemniejsze niebo.</p>
+<p>Ciemność = 2 + liczba zgaszonych świateł sąsiadów, −1 gdy palą się lampki na tarasie, −1 w pełnię, +1 w godzinie przyciemnionej odłamkiem życzenia, minimum 1. Obiekt wymaga ciemności równej swojemu poziomowi (1–4). Gdy jest za jasno, gra mówi: „za jasno na zdjęcie – musisz przekonać sąsiada do zgaszenia światła”.</p>
+<p>Lampki to wybór (na start zgaszone): zapalone dają jeden liścik więcej na noc i gości na tarasie, zgaszone dają ciemniejsze niebo.</p>
 
 <h2>7. Obiekty, światło i gwiazdki</h2>
 <ul>
 <li>40 prawdziwych obiektów widocznych z Polski, po 10 na porę roku. Jasne (poziom 1) są znane od razu; pozostałe wiszą na niebie jako mgliste plamki, dopóki gracz ich nie namierzy skanowaniem.</li>
-<li>Obiekty są rozsiane po całym niebie (stałe miejsca, inne w każdej porze). Stuknięcie obiektu ustawia go jako cel bieżącego bloku.</li>
-<li>Światło układa się w progi: b bloków = ★, 2b = ★★, 3b = ★★★ (komplet). Minigierka wywoływania nie da więcej gwiazdek, niż pozwala zebrane światło. Światło nie znika po wywołaniu.</li>
+<li>Obiekty są rozsiane po całym niebie (stałe miejsca, inne w każdej porze). Stuknięcie obiektu ustawia go jako cel bieżącej godziny.</li>
+<li>Światło układa się w progi: b godzin = ★, 2b = ★★, 3b = ★★★ (komplet). Minigierka wywoływania nie da więcej gwiazdek, niż pozwala zebrane światło. Światło nie znika po wywołaniu.</li>
 <li>Pierwszą naklejkę gracz sam przeciąga do albumu; lepsza odbitka podmienia ją automatycznie.</li>
-<li>Złota ramka: obiekt (wymagający więcej niż 1 bloku) doprowadzony do pierwszej gwiazdki jednym ciągiem, jednej nocy.</li>
-<li>Niektóre obiekty mają okna widoczności (np. Andromeda dopiero od bloku 3, Wenus tylko w blokach 1–2) albo nie lubią jasnego Księżyca.</li>
+<li>Złota ramka: obiekt (wymagający więcej niż 1 godziny) doprowadzony do pierwszej gwiazdki jednym ciągiem, jednej nocy.</li>
+<li>Niektóre obiekty mają okna widoczności (np. Andromeda dopiero od godziny 3, Wenus tylko w godzinach 1–2) albo nie lubią pełni.</li>
 </ul>
-<table><tr><th>Obiekt</th><th>Typ</th><th>Pora</th><th>Poziom</th><th>Bloki na ★ / ★★ / ★★★</th><th>Minigierka</th><th>Notatka</th></tr><tr><td>Księżyc</td><td>Księżyc</td><td>Jesień</td><td>1</td><td>1 / 2 / 3</td><td>ostrość</td><td>Zawsze się udaje. Pierwsza naklejka.</td></tr><tr><td>Saturn</td><td>planeta</td><td>Jesień</td><td>1</td><td>1 / 2 / 3</td><td>ostrość</td><td>Pierścienie!</td></tr><tr><td>Gromada Sowa (NGC 457)</td><td>gromada</td><td>Jesień</td><td>2</td><td>1 / 2 / 3</td><td>nakładanie klatek</td><td>Wygląda jak ludzik z rozłożonymi rękami.</td></tr><tr><td>Podwójna Gromada w Perseuszu</td><td>gromada</td><td>Jesień</td><td>2</td><td>2 / 4 / 6</td><td>nakładanie klatek</td><td>Dwie gromady w jednym kadrze.</td></tr><tr><td>M15 w Pegazie</td><td>gromada kulista</td><td>Jesień</td><td>2</td><td>2 / 4 / 6</td><td>nakładanie klatek</td><td>Ciasna kula gwiazd.</td></tr><tr><td>Galaktyka Andromedy (M31)</td><td>galaktyka</td><td>Jesień</td><td>3</td><td>3 / 6 / 9</td><td>ścieranie szumu</td><td>Wieczorem chowa się za dachem, trzeba poczekać.</td></tr><tr><td>Mgławica Ameryka Północna (NGC 7000)</td><td>mgławica</td><td>Jesień</td><td>3</td><td>3 / 6 / 9</td><td>suwaki barw</td><td>Nie lubi Księżyca.</td></tr><tr><td>Galaktyka Trójkąta (M33)</td><td>galaktyka</td><td>Jesień</td><td>4</td><td>4 / 8 / 12</td><td>ścieranie szumu</td><td>Blada, wymaga ciemnego nieba.</td></tr><tr><td>Mgławica Serce (IC 1805)</td><td>mgławica</td><td>Jesień</td><td>4</td><td>4 / 8 / 12</td><td>suwaki barw</td><td>Ulubienica pary z końca ulicy.</td></tr><tr><td>Mgławica Ślimak (NGC 7293)</td><td>mgławica</td><td>Jesień</td><td>4</td><td>3 / 6 / 9</td><td>suwaki barw</td><td>Bardzo nisko nad dachami, krótkie okno.</td></tr><tr><td>Jowisz</td><td>planeta</td><td>Zima</td><td>1</td><td>1 / 2 / 3</td><td>ostrość</td><td>Pasy i cztery księżyce.</td></tr><tr><td>Mars</td><td>planeta</td><td>Zima</td><td>1</td><td>1 / 2 / 3</td><td>ostrość</td><td>Mała czerwona tarcza.</td></tr><tr><td>Plejady (M45)</td><td>gromada</td><td>Zima</td><td>2</td><td>1 / 2 / 3</td><td>nakładanie klatek</td><td>Widać je też gołym okiem.</td></tr><tr><td>M35 w Bliźniętach</td><td>gromada</td><td>Zima</td><td>2</td><td>2 / 4 / 6</td><td>nakładanie klatek</td><td>Rozsypany cukier.</td></tr><tr><td>M37 w Woźnicy</td><td>gromada</td><td>Zima</td><td>2</td><td>2 / 4 / 6</td><td>nakładanie klatek</td><td>Gęsta, z pomarańczową gwiazdą w środku.</td></tr><tr><td>Wielka Mgławica w Orionie (M42)</td><td>mgławica</td><td>Zima</td><td>2</td><td>2 / 4 / 6</td><td>suwaki barw</td><td>Jasna, pierwsza „prawdziwa” mgławica.</td></tr><tr><td>Mgławica Płomień (NGC 2024)</td><td>mgławica</td><td>Zima</td><td>3</td><td>3 / 6 / 9</td><td>suwaki barw</td><td>Tuż przy jasnej gwieździe Pasa Oriona.</td></tr><tr><td>Mgławica Krab (M1)</td><td>mgławica</td><td>Zima</td><td>3</td><td>3 / 6 / 9</td><td>suwaki barw</td><td>Pozostałość po supernowej.</td></tr><tr><td>Mgławica Rozeta</td><td>mgławica</td><td>Zima</td><td>4</td><td>4 / 8 / 12</td><td>suwaki barw</td><td>Róża z dziurą w środku.</td></tr><tr><td>Mgławica Koński Łeb</td><td>mgławica</td><td>Zima</td><td>4</td><td>4 / 8 / 12</td><td>suwaki barw</td><td>Najtrudniejszy obiekt zimy.</td></tr><tr><td>Wenus</td><td>planeta</td><td>Wiosna</td><td>1</td><td>1 / 2 / 3</td><td>ostrość</td><td>Tylko w pierwszych blokach, potem zachodzi.</td></tr><tr><td>Mizar i Alkor</td><td>gwiazda podwójna</td><td>Wiosna</td><td>1</td><td>1 / 2 / 3</td><td>ostrość</td><td>W dyszlu Wielkiego Wozu.</td></tr><tr><td>Żłóbek (M44)</td><td>gromada</td><td>Wiosna</td><td>2</td><td>1 / 2 / 3</td><td>nakładanie klatek</td><td>Rój pszczół.</td></tr><tr><td>M3</td><td>gromada kulista</td><td>Wiosna</td><td>2</td><td>2 / 4 / 6</td><td>nakładanie klatek</td><td>Pół miliona gwiazd w jednej kuli.</td></tr><tr><td>Galaktyki Bodego i Cygaro (M81 i M82)</td><td>galaktyka</td><td>Wiosna</td><td>3</td><td>3 / 6 / 9</td><td>ścieranie szumu</td><td>Dwie w jednym kadrze.</td></tr><tr><td>Galaktyka Wir (M51)</td><td>galaktyka</td><td>Wiosna</td><td>3</td><td>3 / 6 / 9</td><td>ścieranie szumu</td><td>Spirala z towarzyszką.</td></tr><tr><td>Galaktyka Sombrero (M104)</td><td>galaktyka</td><td>Wiosna</td><td>3</td><td>3 / 6 / 9</td><td>ścieranie szumu</td><td>Dość nisko nad dachami.</td></tr><tr><td>Tryplet Lwa</td><td>galaktyka</td><td>Wiosna</td><td>4</td><td>4 / 8 / 12</td><td>ścieranie szumu</td><td>Trzy galaktyki naraz.</td></tr><tr><td>Galaktyka Wiatraczek (M101)</td><td>galaktyka</td><td>Wiosna</td><td>4</td><td>4 / 8 / 12</td><td>ścieranie szumu</td><td>Duża, ale blada.</td></tr><tr><td>Łańcuch Markariana</td><td>galaktyka</td><td>Wiosna</td><td>4</td><td>4 / 8 / 12</td><td>ścieranie szumu</td><td>Sznur galaktyk w Pannie.</td></tr><tr><td>Albireo</td><td>gwiazda podwójna</td><td>Lato</td><td>1</td><td>1 / 2 / 3</td><td>ostrość</td><td>Złota i niebieska.</td></tr><tr><td>Gromada Wieszak</td><td>gromada</td><td>Lato</td><td>1</td><td>1 / 2 / 3</td><td>nakładanie klatek</td><td>Gwiazdy układają się w wieszak.</td></tr><tr><td>Wielka Gromada w Herkulesie (M13)</td><td>gromada kulista</td><td>Lato</td><td>2</td><td>2 / 4 / 6</td><td>nakładanie klatek</td><td>Najsłynniejsza kula północnego nieba.</td></tr><tr><td>Dzika Kaczka (M11)</td><td>gromada</td><td>Lato</td><td>2</td><td>2 / 4 / 6</td><td>nakładanie klatek</td><td>Klucz kaczek w locie.</td></tr><tr><td>Mgławica Pierścień (M57)</td><td>mgławica</td><td>Lato</td><td>2</td><td>2 / 4 / 6</td><td>suwaki barw</td><td>Małe kółko dymu.</td></tr><tr><td>Mgławica Hantle (M27)</td><td>mgławica</td><td>Lato</td><td>3</td><td>2 / 4 / 6</td><td>suwaki barw</td><td>Ogryzek jabłka.</td></tr><tr><td>Mgławica Omega (M17)</td><td>mgławica</td><td>Lato</td><td>3</td><td>3 / 6 / 9</td><td>suwaki barw</td><td>Łabędź na wodzie.</td></tr><tr><td>Mgławica Laguna (M8)</td><td>mgławica</td><td>Lato</td><td>3</td><td>3 / 6 / 9</td><td>suwaki barw</td><td>Bardzo nisko, krótkie okno nad dachami.</td></tr><tr><td>Mgławica Orzeł (M16)</td><td>mgławica</td><td>Lato</td><td>4</td><td>4 / 8 / 12</td><td>suwaki barw</td><td>W środku kryją się Filary Stworzenia.</td></tr><tr><td>Mgławica Welon</td><td>mgławica</td><td>Lato</td><td>4</td><td>4 / 8 / 12</td><td>suwaki barw</td><td>Delikatne włókna, najtrudniejszy obiekt lata.</td></tr></table>
+<table><tr><th>Obiekt</th><th>Typ</th><th>Pora</th><th>Poziom</th><th>Bloki na ★ / ★★ / ★★★</th><th>Minigierka</th><th>Notatka</th></tr><tr><td>Księżyc</td><td>Księżyc</td><td>Jesień</td><td>1</td><td>1 / 2 / 3</td><td>ostrość</td><td>Zawsze się udaje. Pierwsza naklejka.</td></tr><tr><td>Saturn</td><td>planeta</td><td>Jesień</td><td>1</td><td>1 / 2 / 3</td><td>ostrość</td><td>Pierścienie!</td></tr><tr><td>Gromada Sowa (NGC 457)</td><td>gromada</td><td>Jesień</td><td>2</td><td>1 / 2 / 3</td><td>nakładanie klatek</td><td>Wygląda jak ludzik z rozłożonymi rękami.</td></tr><tr><td>Podwójna Gromada w Perseuszu</td><td>gromada</td><td>Jesień</td><td>2</td><td>2 / 4 / 6</td><td>nakładanie klatek</td><td>Dwie gromady w jednym kadrze.</td></tr><tr><td>M15 w Pegazie</td><td>gromada kulista</td><td>Jesień</td><td>2</td><td>2 / 4 / 6</td><td>nakładanie klatek</td><td>Ciasna kula gwiazd.</td></tr><tr><td>Galaktyka Andromedy (M31)</td><td>galaktyka</td><td>Jesień</td><td>3</td><td>3 / 6 / 9</td><td>ścieranie szumu</td><td>Wieczorem chowa się za dachem, trzeba poczekać.</td></tr><tr><td>Mgławica Ameryka Północna (NGC 7000)</td><td>mgławica</td><td>Jesień</td><td>3</td><td>3 / 6 / 9</td><td>suwaki barw</td><td>Nie lubi Księżyca.</td></tr><tr><td>Galaktyka Trójkąta (M33)</td><td>galaktyka</td><td>Jesień</td><td>4</td><td>4 / 8 / 12</td><td>ścieranie szumu</td><td>Blada, wymaga ciemnego nieba.</td></tr><tr><td>Mgławica Serce (IC 1805)</td><td>mgławica</td><td>Jesień</td><td>4</td><td>4 / 8 / 12</td><td>suwaki barw</td><td>Ulubienica pary z końca ulicy.</td></tr><tr><td>Mgławica Ślimak (NGC 7293)</td><td>mgławica</td><td>Jesień</td><td>4</td><td>3 / 6 / 9</td><td>suwaki barw</td><td>Bardzo nisko nad dachami, krótkie okno.</td></tr><tr><td>Jowisz</td><td>planeta</td><td>Zima</td><td>1</td><td>1 / 2 / 3</td><td>ostrość</td><td>Pasy i cztery księżyce.</td></tr><tr><td>Mars</td><td>planeta</td><td>Zima</td><td>1</td><td>1 / 2 / 3</td><td>ostrość</td><td>Mała czerwona tarcza.</td></tr><tr><td>Plejady (M45)</td><td>gromada</td><td>Zima</td><td>2</td><td>1 / 2 / 3</td><td>nakładanie klatek</td><td>Widać je też gołym okiem.</td></tr><tr><td>M35 w Bliźniętach</td><td>gromada</td><td>Zima</td><td>2</td><td>2 / 4 / 6</td><td>nakładanie klatek</td><td>Rozsypany cukier.</td></tr><tr><td>M37 w Woźnicy</td><td>gromada</td><td>Zima</td><td>2</td><td>2 / 4 / 6</td><td>nakładanie klatek</td><td>Gęsta, z pomarańczową gwiazdą w środku.</td></tr><tr><td>Wielka Mgławica w Orionie (M42)</td><td>mgławica</td><td>Zima</td><td>2</td><td>2 / 4 / 6</td><td>suwaki barw</td><td>Jasna, pierwsza „prawdziwa” mgławica.</td></tr><tr><td>Mgławica Płomień (NGC 2024)</td><td>mgławica</td><td>Zima</td><td>3</td><td>3 / 6 / 9</td><td>suwaki barw</td><td>Tuż przy jasnej gwieździe Pasa Oriona.</td></tr><tr><td>Mgławica Krab (M1)</td><td>mgławica</td><td>Zima</td><td>3</td><td>3 / 6 / 9</td><td>suwaki barw</td><td>Pozostałość po supernowej.</td></tr><tr><td>Mgławica Rozeta</td><td>mgławica</td><td>Zima</td><td>4</td><td>4 / 8 / 12</td><td>suwaki barw</td><td>Róża z dziurą w środku.</td></tr><tr><td>Mgławica Koński Łeb</td><td>mgławica</td><td>Zima</td><td>4</td><td>4 / 8 / 12</td><td>suwaki barw</td><td>Najtrudniejszy obiekt zimy.</td></tr><tr><td>Wenus</td><td>planeta</td><td>Wiosna</td><td>1</td><td>1 / 2 / 3</td><td>ostrość</td><td>Tylko w pierwszych godzinach, potem zachodzi.</td></tr><tr><td>Mizar i Alkor</td><td>gwiazda podwójna</td><td>Wiosna</td><td>1</td><td>1 / 2 / 3</td><td>ostrość</td><td>W dyszlu Wielkiego Wozu.</td></tr><tr><td>Żłóbek (M44)</td><td>gromada</td><td>Wiosna</td><td>2</td><td>1 / 2 / 3</td><td>nakładanie klatek</td><td>Rój pszczół.</td></tr><tr><td>M3</td><td>gromada kulista</td><td>Wiosna</td><td>2</td><td>2 / 4 / 6</td><td>nakładanie klatek</td><td>Pół miliona gwiazd w jednej kuli.</td></tr><tr><td>Galaktyki Bodego i Cygaro (M81 i M82)</td><td>galaktyka</td><td>Wiosna</td><td>3</td><td>3 / 6 / 9</td><td>ścieranie szumu</td><td>Dwie w jednym kadrze.</td></tr><tr><td>Galaktyka Wir (M51)</td><td>galaktyka</td><td>Wiosna</td><td>3</td><td>3 / 6 / 9</td><td>ścieranie szumu</td><td>Spirala z towarzyszką.</td></tr><tr><td>Galaktyka Sombrero (M104)</td><td>galaktyka</td><td>Wiosna</td><td>3</td><td>3 / 6 / 9</td><td>ścieranie szumu</td><td>Dość nisko nad dachami.</td></tr><tr><td>Tryplet Lwa</td><td>galaktyka</td><td>Wiosna</td><td>4</td><td>4 / 8 / 12</td><td>ścieranie szumu</td><td>Trzy galaktyki naraz.</td></tr><tr><td>Galaktyka Wiatraczek (M101)</td><td>galaktyka</td><td>Wiosna</td><td>4</td><td>4 / 8 / 12</td><td>ścieranie szumu</td><td>Duża, ale blada.</td></tr><tr><td>Łańcuch Markariana</td><td>galaktyka</td><td>Wiosna</td><td>4</td><td>4 / 8 / 12</td><td>ścieranie szumu</td><td>Sznur galaktyk w Pannie.</td></tr><tr><td>Albireo</td><td>gwiazda podwójna</td><td>Lato</td><td>1</td><td>1 / 2 / 3</td><td>ostrość</td><td>Złota i niebieska.</td></tr><tr><td>Gromada Wieszak</td><td>gromada</td><td>Lato</td><td>1</td><td>1 / 2 / 3</td><td>nakładanie klatek</td><td>Gwiazdy układają się w wieszak.</td></tr><tr><td>Wielka Gromada w Herkulesie (M13)</td><td>gromada kulista</td><td>Lato</td><td>2</td><td>2 / 4 / 6</td><td>nakładanie klatek</td><td>Najsłynniejsza kula północnego nieba.</td></tr><tr><td>Dzika Kaczka (M11)</td><td>gromada</td><td>Lato</td><td>2</td><td>2 / 4 / 6</td><td>nakładanie klatek</td><td>Klucz kaczek w locie.</td></tr><tr><td>Mgławica Pierścień (M57)</td><td>mgławica</td><td>Lato</td><td>2</td><td>2 / 4 / 6</td><td>suwaki barw</td><td>Małe kółko dymu.</td></tr><tr><td>Mgławica Hantle (M27)</td><td>mgławica</td><td>Lato</td><td>3</td><td>2 / 4 / 6</td><td>suwaki barw</td><td>Ogryzek jabłka.</td></tr><tr><td>Mgławica Omega (M17)</td><td>mgławica</td><td>Lato</td><td>3</td><td>3 / 6 / 9</td><td>suwaki barw</td><td>Łabędź na wodzie.</td></tr><tr><td>Mgławica Laguna (M8)</td><td>mgławica</td><td>Lato</td><td>3</td><td>3 / 6 / 9</td><td>suwaki barw</td><td>Bardzo nisko, krótkie okno nad dachami.</td></tr><tr><td>Mgławica Orzeł (M16)</td><td>mgławica</td><td>Lato</td><td>4</td><td>4 / 8 / 12</td><td>suwaki barw</td><td>W środku kryją się Filary Stworzenia.</td></tr><tr><td>Mgławica Welon</td><td>mgławica</td><td>Lato</td><td>4</td><td>4 / 8 / 12</td><td>suwaki barw</td><td>Delikatne włókna, najtrudniejszy obiekt lata.</td></tr></table>
 
 <h2>8. Wywoływanie zdjęć (minigierki)</h2>
 <ul>
@@ -70,69 +77,79 @@
 </ul>
 <p>Więcej zebranego światła = większa tolerancja. Na ekranie wyniku i w albumie jest ciekawostka o obiekcie.</p>
 
-<h2>9. Album</h2>
+<h2>9. Spadające gwiazdy i odłamki życzeń</h2>
 <ul>
-<li>Strony: Jesień, Zima, Wiosna, Lato (po 10 zdjęć, szare kontury brakujących) oraz Wyczyny.</li>
-<li>Stuknięcie zdjęcia otwiera kartę: duży kadr, gwiazdki, notatka i ciekawostka.</li>
-<li>Wyczyny i wydarzenia: Pierwsza naklejka, Seria, Idealna noc (8/8 udanych bloków), Łut szczęścia, Stacja kosmiczna, Geminidy, Zaćmienie Księżyca, Perseidy, Kometa oraz 5 faz Księżyca.</li>
-<li>Zapełniona strona pory roku = prezent od sąsiadów na taras (latarenka, doniczka z wrzosem, poduszka dla psa, dzwonki wietrzne).</li>
+<li>Co kilka sekund (losowo) przez niebo przelatuje spadająca gwiazda. Stuknięcie jej w locie daje <b>odłamek życzenia</b> (dzwoneczek). Najwyżej 2 na noc, 5 w zapasie; licznik ✧ jest na górze ekranu.</li>
+<li>Odłamek to joker ratunkowy:
+  <ol><li>rozgonić chmury w wybranej godzinie,</li><li>przyciemnić niebo o 1 w wybranej godzinie (obiekt o poziom trudniejszy),</li><li>wydłużyć noc o 1 godzinę (raz na noc).</li></ol>
+  Pierwsze dwie opcje są na górze listy po stuknięciu godziny, trzecia pod przyciskiem ✧.</li>
 </ul>
 
-<h2>10. Sąsiedzi, liściki, goście</h2>
+<h2>10. Album</h2>
+<ul>
+<li>Strony: Jesień, Zima, Wiosna, Lato (po 10 zdjęć, szare kontury brakujących), Wyczyny (★) i Mapa Nieba.</li>
+<li>Stuknięcie zdjęcia otwiera kartę: duży kadr, gwiazdki, notatka i ciekawostka.</li>
+<li>Wyczyny i wydarzenia: Pierwsza naklejka, Seria, Idealna noc, Łut szczęścia, Odłamek życzenia, Stacja kosmiczna, Geminidy, Zaćmienie Księżyca, Perseidy, Kometa oraz 5 faz Księżyca.</li>
+<li>Zapełniona strona pory roku = prezent od sąsiadów na taras (latarenka, doniczka z wrzosem, poduszka dla psa, dzwonki wietrzne).</li>
+<li><b>Mapa Nieba:</b> 12 gwiazdozbiorów (po 3 na porę). Zdjęcie dowolnego obiektu z gwiazdozbioru odblokowuje jego pole. Gracz łączy gwiazdy palcem jak w „połącz kropki”: wzór widać przez chwilę (przycisk „Pokaż wzór” go przypomina), wśród gwiazd są zmyłki. Po poprawnym połączeniu rysunek rozbłyskuje złotą linią i zostaje w albumie. Łączenie nie zajmuje godziny.</li>
+</ul>
+
+<h2>11. Sąsiedzi, liściki, goście</h2>
 <table><tr><th>Imię (robocze)</th><th>Kto</th><th>Jego światło</th><th>Pierwszy liścik</th></tr><tr><td>Pani Helena</td><td>starsza pani z naprzeciwka</td><td>lampę na ganku</td><td>Jesień, noc 1</td></tr><tr><td>Antek</td><td>dzieciak z sąsiedniego domu</td><td>lampkę w oknie</td><td>Jesień, noc 2</td></tr><tr><td>Pan Ryszard</td><td>facet od ogrodu</td><td>reflektor z czujnikiem ruchu</td><td>Jesień, noc 4</td></tr><tr><td>Ola</td><td>studentka z poddasza</td><td>lampę biurkową</td><td>Zima, noc 1</td></tr><tr><td>Ania i Jan</td><td>para z końca ulicy</td><td>girlandy na płocie</td><td>Wiosna, noc 1</td></tr></table>
 <ul>
-<li>Kot wychodzi po pierwszym bloku i wraca z liścikami (2 na noc, 3 przy zapalonych lampkach). Najpierw piszą ci, których bohaterka zna najsłabiej.</li>
+<li>Kot wychodzi po pierwszej godzinie i wraca z liścikami (2 na noc, 3 przy zapalonych lampkach). Najpierw piszą ci, których bohaterka zna najsłabiej. Można też samemu napisać liścik (godzina).</li>
 <li>Liścik = prośba o zdjęcie konkretnego obiektu. Sąsiad nigdy nie prosi drugi raz o to samo i najpierw prosi o zdjęcia, których gracz jeszcze nie ma. Prośby dotyczą obiektów osiągalnych przy obecnej liczbie zgaszonych świateł.</li>
 <li>Serca: 2 = sąsiad gasi swoje światło; 3 = zaczyna wpadać na taras (co drugą noc, gdy palą się lampki).</li>
-<li>Z gościem można porozmawiać (blok): po 4 kwestie fabularne na sąsiada.</li>
+<li>Z gościem można porozmawiać (godzina): po 4 kwestie fabularne na sąsiada.</li>
 <li>W noce Perseidów i komety na taras przychodzą wszyscy znajomi.</li>
 </ul>
 
-<h2>11. Księżyc</h2>
-<p>Księżyc jest jeden i zmienia fazę co noc; cykl trwa jedną porę roku. Pora zaczyna się wąskim sierpem, pełnia wypada w 5. noc, nów w 11. Jesienią Księżyc jest też zwykłym obiektem do albumu. W każdej porze można złapać brakującą fazę do kolekcji. Wokół pełni niebo jest jaśniejsze o 1, w nów najciemniejsze.</p>
+<h2>12. Księżyc</h2>
+<p>Księżyc jest jeden i zmienia fazę co noc; cykl trwa jedną porę roku i nie ma faz garbatych, żeby niebo rzadko było rozjaśnione. Kolejność w porze (12 nocy): sierp (2 noce) → pierwsza połowa (3) → pełnia (1) → druga połowa (3) → drugi sierp (2) → nów (1). Tylko pełnia rozjaśnia niebo o 1. Jesienią Księżyc jest też zwykłym obiektem do albumu; w każdej porze można złapać brakującą fazę do kolekcji (5 faz).</p>
 
-<h2>12. Wydarzenia specjalne</h2>
+<h2>13. Wydarzenia specjalne</h2>
 <table>
 <tr><th>Wydarzenie</th><th>Kiedy</th><th>Jak działa</th></tr>
 <tr><td>Przelot stacji kosmicznej</td><td>jesień, noc 3 (powtórka w noc 8)</td><td>jasna kropka sunie po niebie, trzeba stuknąć w porę</td></tr>
 <tr><td>Geminidy</td><td>zima, noc 9</td><td>noc bez teleskopu: 30 sekund stukania w spadające gwiazdy</td></tr>
-<tr><td>Zaćmienie Księżyca</td><td>wiosna, noc 5 (pełnia), bloki 4–5</td><td>Księżyc ciemnieje, kara za pełnię znika; można je sfotografować</td></tr>
+<tr><td>Zaćmienie Księżyca</td><td>wiosna, noc 6 (pełnia), godziny 4–5</td><td>Księżyc ciemnieje, kara za pełnię znika; można je sfotografować</td></tr>
 <tr><td>Perseidy</td><td>lato, noc 4</td><td>jak Geminidy, z sąsiadami na tarasie</td></tr>
 <tr><td>Kometa</td><td>lato, noc 12 (finał)</td><td>długość warkocza zależy od ciemności; po zdjęciu zakończenie fabuły</td></tr>
 </table>
 
-<h2>13. Fabuła</h2>
+<h2>14. Fabuła</h2>
 <p>Bohaterka dopiero się wprowadziła i nikogo nie zna. Niebo staje się sposobem na poznanie ludzi. Łuk na cztery pory: jesień (nowa, jasne niebo, pierwszy liścik), zima (kolejni sąsiedzi, pierwsze zgaszone światła, pierwsze mgławice), wiosna (goście na tarasie, plotka o komecie), lato (ciemne niebo, pełny taras, wspólna noc pod kometą). Kot i pies trzymają się osobno, w finale śpią razem.</p>
 <p>Fabułę niosą: liściki (powitanie + 3 prośby + „zgasiłam światło” + „wpadnę” na sąsiada), rozmowy z gośćmi (4 na sąsiada), dziennik o świcie (48 zdań) i okienka na początku każdej pory roku.</p>
 
-<h2>14. Wygląd</h2>
+<h2>15. Wygląd i dźwięk</h2>
 <ul>
-<li>Paleta indygo–fiolet z ditheringiem; ciepłe punkty światła (lampki, okna). Niebo zajmuje około trzech czwartych sceny, taras jest wąskim pasem na dole.</li>
+<li>Paleta indygo–fiolet z ditheringiem; ciepłe punkty światła (lampki, okna). Niebo zajmuje większość sceny, taras jest wąskim pasem na dole.</li>
 <li>Paralaksa: gwiazdy, obłoki gwiezdne, chmurki, miasto w oddali i domy dryfują z różną prędkością i wychylają się za palcem w poziomie i pionie.</li>
-<li>Na niebie: gwiazdozbiory połączone liniami (po dwa na porę roku, z podpisami), spadające gwiazdy jako ozdoba, Droga Mleczna latem.</li>
-<li>Taras: bohaterka w granatowym kocu w gwiazdki na drewnianym fotelu, mosiężny teleskop, pies, chodzący kot, słoik na płocie, migocząca girlanda lampek.</li>
+<li>Niebo jest czyste – bez linii gwiazdozbiorów (te są w albumie). Spadające gwiazdy, latem Droga Mleczna.</li>
+<li>Taras: bohaterka na drewnianym fotelu pod luźno narzuconym granatowym kocem w gwiazdki (fałdy, frędzle, róg zwisający przez podłokietnik), mosiężny teleskop, czekoladowy labrador (podnosi głowę przy zmianie celu), chodzący rudy kot, słoik na płocie, migocząca girlanda lampek.</li>
 <li>Interfejs: zaokrąglone rogi, font Nunito; liściki i dziennik pismem odręcznym na kremowym papierze.</li>
+<li>Muzyka: spokojna, ambientowa kołysanka (cztery akordy z pogłosem i pojedyncze wysokie „gwiazdki”), w pętli. Efekty: klik interfejsu, zebrane światło, chmury, szelest papieru, miauknięcie kota, dzwoneczek spadającej gwiazdy, namierzenie obiektu, łączenie linii, wklejenie naklejki, koniec nocy, ptaki o świcie.</li>
 </ul>
 
-<h2>15. Ciekawostki o obiektach (tekst w grze)</h2>
+<h2>16. Ciekawostki o obiektach (tekst w grze)</h2>
 <ul><li><b>Księżyc:</b> Księżyc oddala się od Ziemi o około 3,8 cm rocznie. Zawsze widzimy tę samą jego stronę, bo obraca się dokładnie raz na jedno okrążenie.</li><li><b>Saturn:</b> Pierścienie Saturna mają ponad 270 tysięcy km średnicy, ale miejscami tylko kilkadziesiąt metrów grubości. Sama planeta ma średnią gęstość mniejszą niż woda.</li><li><b>Gromada Sowa (NGC 457):</b> Leży w Kasjopei, około 8 tysięcy lat świetlnych stąd. Dwie najjaśniejsze gwiazdy to „oczy” sowy, a rozłożone rzędy gwiazd to skrzydła.</li><li><b>Podwójna Gromada w Perseuszu:</b> To dwie młode gromady, h i chi Persei, odległe o ponad 7 tysięcy lat świetlnych. Z ciemnego miejsca widać je gołym okiem jako mglistą plamkę między Perseuszem a Kasjopeją.</li><li><b>M15 w Pegazie:</b> Jedna z najstarszych gromad kulistych: ma około 12 miliardów lat. Jej środek jest tak gęsty, że astronomowie podejrzewają tam czarną dziurę.</li><li><b>Galaktyka Andromedy (M31):</b> Najdalszy obiekt widoczny gołym okiem: 2,5 miliona lat świetlnych. Światło, które łapiesz, wyruszyło, zanim pojawił się człowiek rozumny. Za kilka miliardów lat zderzy się z Drogą Mleczną.</li><li><b>Mgławica Ameryka Północna (NGC 7000):</b> Jej kształt naprawdę przypomina kontynent, razem z Zatoką Meksykańską. Świeci na czerwono, bo pobliskie gorące gwiazdy pobudzają wodór.</li><li><b>Galaktyka Trójkąta (M33):</b> Trzecia co do wielkości galaktyka Grupy Lokalnej, po Andromedzie i Drodze Mlecznej. Leży niecałe 3 miliony lat świetlnych stąd i jest bardzo rozmyta, dlatego potrzebuje ciemnego nieba.</li><li><b>Mgławica Serce (IC 1805):</b> Leży w Kasjopei, około 7500 lat świetlnych stąd. Gromada młodych gwiazd w środku wydmuchuje gaz i rzeźbi kształt serca.</li><li><b>Mgławica Ślimak (NGC 7293):</b> Jedna z najbliższych mgławic planetarnych, około 650 lat świetlnych stąd. Tak za kilka miliardów lat skończy Słońce: odrzuci otoczkę i zostawi białego karła.</li><li><b>Jowisz:</b> Zmieściłoby się w nim ponad 1300 Ziem. Cztery największe księżyce odkrył Galileusz w 1610 roku i widać je już w lornetce.</li><li><b>Mars:</b> Czerwony kolor to rdza, czyli tlenki żelaza w pyle. Na Marsie stoi Olympus Mons, najwyższy wulkan Układu Słonecznego: ponad 20 km.</li><li><b>Plejady (M45):</b> Gołym okiem widać zwykle sześć lub siedem gwiazd, a jest ich ponad tysiąc. W Japonii nazywają się Subaru, stąd logo z gwiazdkami.</li><li><b>M35 w Bliźniętach:</b> Leży u stóp Bliźniąt, niecałe 3 tysiące lat świetlnych stąd. Na niebie zajmuje tyle miejsca, co Księżyc w pełni.</li><li><b>M37 w Woźnicy:</b> Najbogatsza z trzech gromad Woźnicy: ponad 500 gwiazd i około 500 milionów lat. W środku świeci pomarańczowy olbrzym.</li><li><b>Wielka Mgławica w Orionie (M42):</b> Kolebka gwiazd odległa o około 1300 lat świetlnych. Gołym okiem widać ją jako środkową „gwiazdę” w mieczu Oriona.</li><li><b>Mgławica Płomień (NGC 2024):</b> Leży tuż obok Alnitaka, skrajnej gwiazdy Pasa Oriona. Ciemne pasma pyłu na jej tle wyglądają jak knot płomienia.</li><li><b>Mgławica Krab (M1):</b> Pozostałość po supernowej, którą chińscy astronomowie zapisali w 1054 roku. W środku wiruje pulsar: około 30 obrotów na sekundę.</li><li><b>Mgławica Rozeta:</b> Leży w Jednorożcu, około 5 tysięcy lat świetlnych stąd. Gromada gorących gwiazd w środku wydmuchała w niej dziurę.</li><li><b>Mgławica Koński Łeb:</b> To ciemny obłok pyłu na tle świecącego wodoru. Zauważyła ją w 1888 roku Williamina Fleming na szklanej kliszy fotograficznej.</li><li><b>Wenus:</b> Ma fazy jak Księżyc, co zauważył już Galileusz. Obraca się tak wolno, że dzień na Wenus trwa dłużej niż jej rok.</li><li><b>Mizar i Alkor:</b> Dawny test wzroku: kto widzi Alkora obok Mizara, ma dobre oczy. Sam Mizar w teleskopie rozdziela się na kolejną parę gwiazd.</li><li><b>Żłóbek (M44):</b> Znana już w starożytności jako mglista plamka w Raku. Galileusz pierwszy rozdzielił ją teleskopem na pojedyncze gwiazdy.</li><li><b>M3:</b> Około pół miliona gwiazd, 34 tysiące lat świetlnych stąd. Ma wyjątkowo dużo gwiazd zmiennych, które pulsują jak latarnie.</li><li><b>Galaktyki Bodego i Cygaro (M81 i M82):</b> Para odległa o 12 milionów lat świetlnych. Przyciąganie większej M81 wywołało w M82 gwałtowną burzę narodzin gwiazd.</li><li><b>Galaktyka Wir (M51):</b> Pierwsza galaktyka, w której dostrzeżono spiralę: lord Rosse w 1845 roku. Mniejsza towarzyszka ciągnie ją grawitacją za jedno z ramion.</li><li><b>Galaktyka Sombrero (M104):</b> Ciemny pas pyłu przecina ją jak rondo kapelusza. W środku siedzi czarna dziura o masie około miliarda Słońc.</li><li><b>Tryplet Lwa:</b> M65, M66 i NGC 3628, około 35 milionów lat świetlnych stąd. Wszystkie trzy mieszczą się w jednym polu widzenia teleskopu.</li><li><b>Galaktyka Wiatraczek (M101):</b> Większa od Drogi Mlecznej: około 170 tysięcy lat świetlnych średnicy. Widzimy ją dokładnie z góry, jak wiatraczek.</li><li><b>Łańcuch Markariana:</b> Fragment Gromady w Pannie, ponad 50 milionów lat świetlnych stąd. Co najmniej siedem galaktyk tego łańcucha porusza się razem.</li><li><b>Albireo:</b> Głowa Łabędzia. Kontrast złotej i niebieskiej gwiazdy to jedna z najładniejszych par na niebie.</li><li><b>Gromada Wieszak:</b> Oficjalnie Collinder 399, zwana też Gromadą Brocchiego. To nie prawdziwa gromada, tylko przypadkowy układ gwiazd w różnych odległościach.</li><li><b>Wielka Gromada w Herkulesie (M13):</b> Kilkaset tysięcy gwiazd, 22 tysiące lat świetlnych stąd. W 1974 roku z radioteleskopu Arecibo wysłano w jej stronę wiadomość do obcych.</li><li><b>Dzika Kaczka (M11):</b> Jedna z najgęstszych gromad otwartych: prawie 3 tysiące gwiazd. Nazwę zawdzięcza kształtowi klucza lecących kaczek.</li><li><b>Mgławica Pierścień (M57):</b> Gaz odrzucony przez umierającą gwiazdę podobną do Słońca. W środku został po niej biały karzeł.</li><li><b>Mgławica Hantle (M27):</b> Pierwsza odkryta mgławica planetarna: Charles Messier, 1764 rok. Świeci na zielonkawo dzięki tlenowi.</li><li><b>Mgławica Omega (M17):</b> Jedna z najjaśniejszych wylęgarni gwiazd w Drodze Mlecznej, około 5500 lat świetlnych stąd. Bywa też nazywana Łabędziem.</li><li><b>Mgławica Laguna (M8):</b> Z ciemnego miejsca widać ją gołym okiem. Leży w Strzelcu, kilka tysięcy lat świetlnych stąd, a przecina ją ciemny pas pyłu: tytułowa laguna.</li><li><b>Mgławica Orzeł (M16):</b> To tutaj teleskop Hubble’a sfotografował Filary Stworzenia. Leży w Wężu, około 6500 lat świetlnych stąd.</li><li><b>Mgławica Welon:</b> Strzępy gwiazdy, która wybuchła kilkanaście tysięcy lat temu. Cała pętla jest na niebie szersza niż sześć Księżyców w pełni.</li></ul>
 
-<h2>16. Pliki</h2>
+<h2>17. Pliki</h2>
 <ul>
 <li>index.html, lib/phaser.esm.min.js</li>
 <li>src/data.js – obiekty, sąsiedzi, wydarzenia, fazy, ciekawostki, rozmowy, dziennik, gwiazdozbiory</li>
 <li>src/state.js – stan, zapis, reguły</li>
-<li>src/art.js – grafika rysowana kodem; src/world.js – taras i niebo</li>
-<li>src/NightScene.js, ScanScene.js, DevelopScene.js, AlbumScene.js, DawnScene.js, main.js (ekran tytułowy), ui.js</li>
+<li>src/art.js – grafika rysowana kodem; src/world.js – taras i niebo; src/audio.js – muzyka i efekty</li>
+<li>src/NightScene.js, ScanScene.js, DevelopScene.js, AlbumScene.js, ConsScene.js (Mapa Nieba), DawnScene.js, main.js (ekran tytułowy), ui.js</li>
 <li>tools/make_doc.py – ten dokument</li>
 </ul>
 
-<h2>17. Rzeczy otwarte</h2>
+<h2>18. Rzeczy otwarte</h2>
 <ul>
 <li>Imiona sąsiadów, kota i psa są robocze.</li>
-<li>Balans: tempo zdobywania gwiazdek, liczba nocy w porze, próg podwójnego światła.</li>
+<li>Liczba godzin w nocy (teraz 8) i tempo: symulacja „idealnego gracza” zapełnia prawie cały album w pierwszym roku; człowiek będzie wolniejszy, ale warto to sprawdzić na żywo.</li>
 <li>Zdjęcia obiektów mają 48×48 pikseli i są generowane proceduralnie; do ewentualnego przerysowania.</li>
-<li>Brak dźwięku i muzyki.</li>
+<li>Muzyka jest syntezowana; docelowo może ją zastąpić nagrany utwór lo-fi.</li>
 <li>Naklejki wyczynów wklejają się same (tylko zdjęcia wkleja się ręcznie).</li>
 </ul>
 </body></html>

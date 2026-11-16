@@ -215,7 +215,7 @@ const W0 = '#2a1826', W1 = '#4a2c38', W2 = '#6e4240', W3 = '#96654c', W4 = '#c08
 
 export function buildWorld(scene) {
   // --- niebo
-  mk(scene, 'sky', 360, 400, c => grad(c, 360, 400, ['#07081f', '#0a0b2a', '#0e0f38', '#141447', '#1b1958', '#251f6b', '#31267c', '#412c88', '#53338e'], 1.15));
+  mk(scene, 'sky', 360, 512, c => grad(c, 360, 512, ['#07081f', '#0a0b2a', '#0e0f38', '#141447', '#1b1958', '#251f6b', '#31267c', '#412c88', '#53338e'], 1.15));
   mk(scene, 'pollution', 360, 400, c => {
     for (let y = 150; y < 400; y++) for (let x = 0; x < 360; x++) {
       const f = ((y - 150) / 250) ** 1.5, a = Math.floor(f * 6 + bay(x, y)) / 6 * 0.7; if (a <= 0) continue;
@@ -223,15 +223,15 @@ export function buildWorld(scene) {
     }
   });
   const r = rng(42);
-  mk(scene, 'stars3', 720, 380, c => { for (let i = 0; i < 780; i++) { const col = STARC[Math.floor(r() * 4)]; R(c, `rgba(${col[0]},${col[1]},${col[2]},${0.2 + r() * 0.4})`, r() * 720 | 0, (r() ** 1.15) * 376 | 0); } });
-  mk(scene, 'stars2', 720, 380, c => { for (let i = 0; i < 240; i++) { const col = STARC[Math.floor(r() * 4)], x = r() * 716 | 0, y = (r() ** 1.2) * 374 | 0; R(c, `rgba(${col[0]},${col[1]},${col[2]},${0.55 + r() * 0.4})`, x, y); if (r() < 0.18) sparkle(c, x, y, 1); } });
-  mk(scene, 'stars1', 720, 380, c => { for (let i = 0; i < 54; i++) { const x = 8 + r() * 704 | 0, y = 8 + (r() ** 1.3) * 360 | 0; if (i < 14) sparkle(c, x, y, 3 + (r() * 3 | 0)); else { R(c, '#ffffff', x, y, 2, 2); sparkle(c, x, y, 1); } } });
-  mk(scene, 'milky', 720, 380, c => {
-    const b = new Buf(720, 380), q = rng(5);
-    for (let i = 0; i < 150; i++) { const s = i / 149, x = 50 + s * 620, y = 190 + Math.sin(s * 6.283) * 96 + gauss(q) * 16; b.glow(x + gauss(q) * 10, y, 16 + q() * 18, 9 + q() * 9, Math.cos(s * 6.283) * 0.8, q() < 0.3 ? [150, 120, 230] : [110, 130, 235], 0.06 + q() * 0.07); }
-    for (let i = 0; i < 16; i++) { const s = q(), x = 50 + s * 620, y = 190 + Math.sin(s * 6.283) * 96 + gauss(q) * 10; b.glow(x, y, 7 + q() * 6, 5 + q() * 4, q() * 3, [170, 180, 255], 0.22); }
+  mk(scene, 'stars3', 720, 490, c => { for (let i = 0; i < 1000; i++) { const col = STARC[Math.floor(r() * 4)]; R(c, `rgba(${col[0]},${col[1]},${col[2]},${0.2 + r() * 0.4})`, r() * 720 | 0, (r() ** 1.15) * 486 | 0); } });
+  mk(scene, 'stars2', 720, 490, c => { for (let i = 0; i < 310; i++) { const col = STARC[Math.floor(r() * 4)], x = r() * 716 | 0, y = (r() ** 1.2) * 484 | 0; R(c, `rgba(${col[0]},${col[1]},${col[2]},${0.55 + r() * 0.4})`, x, y); if (r() < 0.18) sparkle(c, x, y, 1); } });
+  mk(scene, 'stars1', 720, 490, c => { for (let i = 0; i < 70; i++) { const x = 8 + r() * 704 | 0, y = 8 + (r() ** 1.3) * 470 | 0; if (i < 14) sparkle(c, x, y, 3 + (r() * 3 | 0)); else { R(c, '#ffffff', x, y, 2, 2); sparkle(c, x, y, 1); } } });
+  mk(scene, 'milky', 720, 490, c => {
+    const b = new Buf(720, 490), q = rng(5);
+    for (let i = 0; i < 150; i++) { const s = i / 149, x = 50 + s * 620, y = 245 + Math.sin(s * 6.283) * 130 + gauss(q) * 16; b.glow(x + gauss(q) * 10, y, 16 + q() * 18, 9 + q() * 9, Math.cos(s * 6.283) * 0.8, q() < 0.3 ? [150, 120, 230] : [110, 130, 235], 0.06 + q() * 0.07); }
+    for (let i = 0; i < 16; i++) { const s = q(), x = 50 + s * 620, y = 245 + Math.sin(s * 6.283) * 130 + gauss(q) * 10; b.glow(x, y, 7 + q() * 6, 5 + q() * 4, q() * 3, [170, 180, 255], 0.22); }
     putD(b, c, 5);
-    for (let i = 0; i < 420; i++) { const s = q(); R(c, `rgba(225,230,255,${0.3 + q() * 0.5})`, 50 + s * 620 + gauss(q) * 26 | 0, 190 + Math.sin(s * 6.283) * 96 + gauss(q) * 20 | 0); }
+    for (let i = 0; i < 420; i++) { const s = q(); R(c, `rgba(225,230,255,${0.3 + q() * 0.5})`, 50 + s * 620 + gauss(q) * 26 | 0, 245 + Math.sin(s * 6.283) * 130 + gauss(q) * 20 | 0); }
   });
   // płaskie chmurki nad horyzontem
   mk(scene, 'pclouds', 720, 150, c => {
@@ -329,47 +329,72 @@ export function buildWorld(scene) {
   };
   mk(scene, 'garland_on', 360, 108, garland(true)); mk(scene, 'garland_off', 360, 108, garland(false));
 
-  // --- bohaterka w kraciastym kocu na drewnianym fotelu
+  // --- bohaterka na drewnianym fotelu, okryta kocem w gwiazdki: tkanina opada luźnymi fałdami na boki
   mk(scene, 'hero', 64, 72, c => {
+    // fotel
     R(c, W0, 6, 12, 5, 56); R(c, W0, 53, 12, 5, 56); R(c, W1, 7, 12, 2, 56); R(c, W1, 54, 12, 2, 56);
     R(c, W1, 6, 12, 52, 4); R(c, W3, 6, 12, 52, 1);
     for (let x = 14; x < 52; x += 8) { R(c, W1, x, 16, 4, 32); R(c, W2, x, 16, 1, 32); }
-    R(c, W1, 2, 50, 60, 6); R(c, W2, 2, 50, 60, 2); R(c, W0, 2, 55, 60, 1); R(c, W0, 4, 56, 4, 14); R(c, W0, 56, 56, 4, 14);
-    // granatowy koc w gwiazdki
-    const plaid = (x, y) => {
+    R(c, W1, 2, 50, 60, 6); R(c, W2, 2, 50, 60, 2); R(c, W0, 4, 56, 4, 14); R(c, W0, 56, 56, 4, 14);
+    R(c, W2, 54, 40, 10, 4); R(c, W4, 54, 40, 10, 1); R(c, W1, 58, 44, 4, 8);
+    // wzór koca: granat w gwiazdki; k = jasność (fałdy, cień)
+    const cloth = (x, y, k) => {
       let col = [46, 60, 152];
       const gx = Math.floor((x + 100) / 8), gy2 = Math.floor((y + 100) / 8), hsh = (gx * 73 + gy2 * 151 + gx * gy2 * 7) % 17;
       const dx = Math.abs(x - (gx * 8 - 100 + 2 + hsh % 4)), dy = Math.abs(y - (gy2 * 8 - 100 + 2 + (hsh >> 1) % 4));
       if (hsh % 3 === 0) { if (dx + dy === 0) col = [255, 246, 205]; else if (dx + dy === 1) col = [255, 205, 100]; }
       else if (hsh % 3 === 1 && dx + dy === 0) col = [255, 226, 150];
       else if (hsh % 7 === 2 && dx + dy === 0) col = [170, 195, 255];
-      const sh = (x - 30) / 24 + (y - 40) / 44, k = sh > 0.55 ? 0.6 : sh > 0.25 ? 0.8 : sh < -0.5 ? 1.18 : 1;
       return `rgb(${Math.min(255, col[0] * k) | 0},${Math.min(255, col[1] * k) | 0},${Math.min(255, col[2] * k) | 0})`;
     };
-    const blob = (cx, cy, rx, ry, skew = 0) => { for (let y = -ry; y <= ry; y++) for (let x = -rx; x <= rx; x++) { const d = (x * x) / (rx * rx) + (y * y) / (ry * ry); if (d <= 1) R(c, d > 0.86 ? '#141a4c' : plaid(x + cx + Math.round(y * skew), y + cy), cx + x, cy + y); } };
-    blob(32, 45, 22, 21, 0.15); blob(30, 20, 15, 15, -0.1);
-    for (let i = 0; i < 16; i++) { R(c, '#1a2262', 14 + i, 36 + Math.round(Math.sin(i / 5) * 2)); R(c, '#1a2262', 40 + i * 0.6, 34 + i); }
-    ell(c, '#f6ead0', 30, 22, 11, 10); ell(c, '#10143a', 30, 22, 10, 9); ell(c, '#f4d8bc', 30, 23, 8, 7);
-    R(c, '#5a3428', 22, 16, 17, 4); R(c, '#5a3428', 22, 20, 3, 3); R(c, '#5a3428', 36, 20, 3, 2); R(c, '#7a4a38', 26, 16, 6, 1);
-    R(c, INK, 26, 23, 2, 2); R(c, INK, 33, 23, 2, 2); R(c, '#ffffff', 26, 23); R(c, '#ffffff', 33, 23);
-    R(c, '#e89a90', 24, 26, 2, 1); R(c, '#e89a90', 35, 26, 2, 1); R(c, '#b8606a', 29, 27, 3, 1);
-    // kubek w dłoniach i para
+    // krawędzie tkaniny: wąsko na ramionach, szeroko u dołu; lewy róg zwisa przez podłokietnik aż do desek
+    const left = y => (y < 30 ? 31 - (y - 22) * 1.5 : y < 44 ? 19 - (y - 30) * 0.75 : 8.5 - (y - 44) * 0.35 + Math.sin(y * 0.9) * 0.8);
+    const right = y => (y < 30 ? 31 + (y - 22) * 1.5 : y < 46 ? 43 + (y - 30) * 0.6 : 52.6 + Math.sin(y * 0.7) * 0.9);
+    const hem = x => (x < 14 ? 69 : x < 22 ? 66 - (x % 4 < 2 ? 0 : 1) : 62 + Math.round(Math.sin(x * 0.75) * 1.4)); // falisty dół
+    for (let y = 22; y <= 70; y++) {
+      const l = Math.round(left(y)), r2 = Math.round(right(y));
+      for (let x = l; x <= r2; x++) {
+        if (y > hem(x)) continue;
+        // fałdy rozchodzą się wachlarzem od ramion
+        const u = (x - 31) / Math.max(4, (r2 - l) / 2), fold = Math.sin(u * 7.5 + (y - 22) * 0.06) * (y > 30 ? 1 : 0.3);
+        let k = 1 + fold * 0.17 - Math.max(0, u - 0.25) * 0.3;
+        if (x - l < 2 || r2 - x < 1 || y >= hem(x)) k = 0.5; else if (fold < -0.88 && y > 32) k = 0.62;
+        R(c, cloth(x, y, k), x, y);
+      }
+    }
+    for (const fx2 of [14, 18, 26, 37, 45]) R(c, '#ffd070', fx2, hem(fx2) + 1, 1, 2); // frędzle
+    // kaptur z koca i buzia
+    for (let y = -13; y <= 12; y++) for (let x = -13; x <= 13; x++) {
+      const d = (x * x) / 169 + (y * y) / (y < 0 ? 169 : 140);
+      if (d <= 1) R(c, cloth(31 + x, 19 + y, d > 0.84 ? 0.5 : 1.08 - Math.max(0, x) * 0.03), 31 + x, 19 + y);
+    }
+    R(c, cloth(30, 5, 1.1), 28, 5, 5, 2); // zagięcie na czubku
+    ell(c, '#f6ead0', 31, 21, 10, 9); ell(c, '#10143a', 31, 21, 9, 8); ell(c, '#f4d8bc', 31, 22, 8, 7);
+    R(c, '#5a3428', 23, 15, 17, 4); R(c, '#5a3428', 23, 19, 3, 3); R(c, '#5a3428', 37, 19, 3, 2); R(c, '#7a4a38', 27, 15, 6, 1);
+    R(c, INK, 27, 22, 2, 2); R(c, INK, 34, 22, 2, 2); R(c, '#ffffff', 27, 22); R(c, '#ffffff', 34, 22);
+    R(c, '#e89a90', 25, 25, 2, 1); R(c, '#e89a90', 36, 25, 2, 1); R(c, '#b8606a', 30, 26, 3, 1);
+    // rozchylenie koca, dłonie z kubkiem i para
+    for (let y = 31; y < 39; y++) R(c, '#141a4c', 31 - Math.floor((y - 31) / 3), y, 1 + Math.floor((y - 31) / 2), 1);
     R(c, '#f6ead0', 27, 38, 9, 8); R(c, '#ffffff', 27, 38, 9, 1); R(c, '#c8b8a0', 34, 39, 2, 7); R(c, '#b86a3a', 28, 39, 7, 1); R(c, '#f6ead0', 36, 40, 2, 1); R(c, '#f6ead0', 37, 41, 1, 3); R(c, '#f6ead0', 36, 44, 2, 1);
     R(c, '#f4d8bc', 24, 42, 4, 4); R(c, '#f4d8bc', 35, 42, 4, 4); R(c, '#d8b098', 24, 45, 4, 1); R(c, '#d8b098', 35, 45, 4, 1);
+    R(c, cloth(22, 46, 0.62), 22, 46, 19, 1);
     R(c, 'rgba(255,255,255,0.55)', 30, 34, 1, 2); R(c, 'rgba(255,255,255,0.4)', 32, 31, 1, 2); R(c, 'rgba(255,255,255,0.3)', 30, 28, 1, 2);
-    // podłokietniki przed kocem, kapcie
-    R(c, W2, 0, 40, 10, 4); R(c, W4, 0, 40, 10, 1); R(c, W1, 2, 44, 4, 8); R(c, W2, 54, 40, 10, 4); R(c, W4, 54, 40, 10, 1); R(c, W1, 58, 44, 4, 8);
-    for (const sx of [19, 34]) { R(c, '#f6ead0', sx, 64, 10, 5); R(c, '#c8b8a0', sx, 68, 10, 1); R(c, '#e88a9a', sx + 3, 64, 4, 2); }
+    // kapcie wystające spod koca
+    for (const sx of [24, 37]) { R(c, '#f6ead0', sx, 65, 9, 5); R(c, '#c8b8a0', sx, 69, 9, 1); R(c, '#e88a9a', sx + 3, 65, 3, 2); }
   });
+  // czekoladowy labrador: leży z łapami do przodu, głowę podnosi przy zmianie celu
   const dog = up => c => {
-    const B = '#efe4d0', Sd = '#cdbda4', P = '#b07a4a', D = '#7a4e30';
-    ell(c, Sd, 28, 19, 17, 6); ell(c, B, 28, 17, 17, 6); ell(c, P, 35, 15, 8, 4); ell(c, D, 37, 14, 4, 2);
-    R(c, B, 43, 19, 8, 3); R(c, Sd, 49, 17, 3, 3); R(c, B, 36, 21, 10, 4); R(c, Sd, 36, 24, 10, 1);
-    R(c, B, 5, 21, 13, 4); R(c, Sd, 5, 24, 13, 1); R(c, Sd, 9, 21, 1, 3); R(c, Sd, 13, 21, 1, 3);
-    const hy = up ? 4 : 12;
-    ell(c, B, 12, hy + 5, 7, 5); R(c, B, 2, hy + 5, 7, 5); R(c, Sd, 2, hy + 9, 8, 1); R(c, INK, 1, hy + 5, 3, 2);
-    if (up) { R(c, INK, 8, hy + 3, 2, 2); R(c, '#ffffff', 8, hy + 3); R(c, '#c8504a', 12, hy + 10, 7, 2); } else R(c, INK, 7, hy + 4, 3, 1);
-    R(c, P, 13, hy, 6, 9); R(c, D, 15, hy + 1, 4, 8); R(c, P, 9, hy + 1, 4, 3);
+    const B = '#6b4226', Sd = '#4a2c18', Hi = '#8a5a36', Ear = '#4e2e1a';
+    ell(c, Sd, 29, 20, 18, 6); ell(c, B, 29, 18, 18, 6); ell(c, Hi, 27, 14, 12, 2);        // tułów z połyskiem na grzbiecie
+    R(c, B, 44, 19, 7, 3); R(c, Sd, 49, 20, 3, 2); R(c, B, 50, 17, 2, 3);                  // gruby ogon
+    R(c, B, 36, 22, 11, 4); R(c, Sd, 36, 25, 11, 1);                                         // tylna łapa
+    R(c, B, 4, 22, 15, 4); R(c, Sd, 4, 25, 15, 1); R(c, Sd, 8, 22, 1, 3); R(c, Sd, 13, 22, 1, 3); // przednie łapy
+    const hy = up ? 3 : 11;
+    ell(c, B, 13, hy + 6, 8, 6); R(c, B, 2, hy + 6, 9, 6); R(c, Hi, 3, hy + 6, 7, 1); R(c, Sd, 2, hy + 11, 10, 1); // łeb i kufa
+    R(c, INK, 1, hy + 6, 3, 3); R(c, '#2a1810', 3, hy + 10, 4, 1);                           // nos, pysk
+    if (up) { R(c, INK, 8, hy + 4, 2, 2); R(c, '#ffffff', 8, hy + 4); R(c, '#c8504a', 13, hy + 12, 8, 2); R(c, PAL.warm1, 16, hy + 13, 2, 2); }
+    else R(c, INK, 7, hy + 5, 3, 1);
+    R(c, Ear, 14, hy + 1, 7, 10); R(c, Sd, 16, hy + 3, 4, 8); R(c, Ear, 15, hy + 11, 4, 2);  // oklapnięte ucho
   };
   mk(scene, 'dog0', 52, 26, dog(false)); mk(scene, 'dog1', 52, 26, dog(true));
   const cat = f => c => {
@@ -430,6 +455,9 @@ export function buildWorld(scene) {
     dith(c, '#2a3160', 6, 22, 100, 10, 0.4);
   });
   mk(scene, 'mote', 2, 2, c => R(c, '#fff', 0, 0, 2, 2));
+  mk(scene, 'ic_wish', 12, 12, c => { R(c, '#e88ad0', 5, 0, 2, 12); R(c, '#e88ad0', 0, 5, 12, 2); R(c, '#ffd0f0', 4, 4, 4, 4); R(c, PAL.white, 5, 5, 2, 2); });
+  mk(scene, 'ic_con', 12, 12, c => { c.strokeStyle = PAL.blue; c.lineWidth = 1; c.beginPath(); c.moveTo(2.5, 9.5); c.lineTo(5.5, 3.5); c.lineTo(9.5, 6.5); c.lineTo(8.5, 10.5); c.stroke(); for (const [x, y] of [[2, 9], [5, 3], [9, 6], [8, 10]]) R(c, PAL.white, x, y, 2, 2); });
+  mk(scene, 'ic_pen', 12, 12, c => { R(c, PAL.cream, 2, 2, 8, 9); R(c, '#c8b8a0', 2, 10, 8, 1); for (const y of [4, 6, 8]) R(c, '#8a6450', 3, y, y === 8 ? 4 : 6, 1); R(c, PAL.warm2, 8, 1, 2, 2); });
   mk(scene, 'smudge', 24, 24, c => { const b = new Buf(24, 24); b.glow(12, 12, 6, 5, 0.5, [150, 165, 240], 0.75); putD(b, c, 4); R(c, 'rgba(230,235,255,0.8)', 12, 12); });
   mk(scene, 'ic_scan', 12, 12, c => { for (let a = 0; a < 6.3; a += 0.2) R(c, PAL.warm1, 5.5 + Math.cos(a) * 4.5, 5.5 + Math.sin(a) * 4.5); R(c, PAL.warm0, 5, 3, 1, 5); R(c, PAL.warm0, 3, 5, 5, 1); R(c, PAL.white, 5, 5); });
   mk(scene, 'comet_sky', 140, 60, c => { const b = new Buf(140, 60); for (let s = 0; s < 120; s++) b.glow(16 + s, 44 - s * 0.3, 2 + s * 0.08, 2 + s * 0.08, 0, [170, 215, 255], 0.3 * (1 - s / 124)); b.glow(16, 44, 4, 4, 0, [235, 255, 248], 1.8); putD(b, c, 5); sparkle(c, 16, 44, 5); });

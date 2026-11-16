@@ -8,7 +8,9 @@ import { DevelopScene } from './DevelopScene.js';
 import { AlbumScene } from './AlbumScene.js';
 import { ScanScene } from './ScanScene.js';
 import { DawnScene } from './DawnScene.js';
-import { W, H, setupCam, txt, button, dialog } from './ui.js';
+import { ConsScene } from './ConsScene.js';
+import { initAudio, toggleMute, isMuted } from './audio.js';
+import { W, H, PY, setupCam, txt, button, dialog } from './ui.js';
 
 class TitleScene extends Phaser.Scene {
   constructor() { super('Title'); }
@@ -17,13 +19,15 @@ class TitleScene extends Phaser.Scene {
     buildWorld(this); buildObjects(this);
     const had = hasSave();
     load();
-    new World(this);
-    this.add.rectangle(W / 2, 556, W, 170, 0x0b1026);
-    this.add.rectangle(W / 2, 472, W, 2, 0x4a3238);
-    txt(this, W / 2, 40, 'Under a Blanket\nof Stars', { size: 32, ox: 0.5, style: '800', color: '#ffe9a8', align: 'center', ls: -2 });
+    const world = new World(this);
+    world.garland.setTexture('garland_on'); world.twinkle.setVisible(true); world.lampGlow.setVisible(true); // na ekranie tytułowym lampki zawsze świecą
+    this.add.rectangle(W / 2, (PY + H) / 2, W, H - PY, 0x0b1026);
+    this.add.rectangle(W / 2, PY, W, 2, 0x4a3238);
+    txt(this, W / 2, 70, 'Under a Blanket\nof Stars', { size: 32, ox: 0.5, style: '800', color: '#ffe9a8', align: 'center', ls: -2 });
+    const mute = button(this, W - 40, H - 22, 64, 26, isMuted() ? '♪ wył.' : '♪ wł.', () => { toggleMute(); mute.setLabel(isMuted() ? '♪ wył.' : '♪ wł.'); }, { size: 11, fill: 0x1b2650 });
     const started = had && (S.night > 0 || S.intro);
-    button(this, W / 2, 520, 220, 44, started ? `Kontynuuj (${SEASONS[season()]}, noc ${nightNo() + 1})` : 'Wyjdź na taras', () => this.scene.start('Night'), { fill: 0x8a3a56, stroke: 0xe88a9a, size: 14 });
-    if (started) button(this, W / 2, 576, 220, 32, 'Nowa gra', () => dialog(this, 'Nowa gra', 'Zacząć od nowa? Album i znajomości z sąsiadami przepadną.', [{ label: 'Od nowa', cb: () => { newGame(); this.scene.start('Night'); } }, { label: 'Anuluj' }]), { size: 12 });
+    button(this, W / 2, PY + 54, 220, 44, started ? `Kontynuuj (${SEASONS[season()]}, noc ${nightNo() + 1})` : 'Wyjdź na taras', () => this.scene.start('Night'), { fill: 0x8a3a56, stroke: 0xe88a9a, size: 14 });
+    if (started) button(this, W / 2, PY + 108, 220, 32, 'Nowa gra', () => dialog(this, 'Nowa gra', 'Zacząć od nowa? Album i znajomości z sąsiadami przepadną.', [{ label: 'Od nowa', cb: () => { newGame(); this.scene.start('Night'); } }, { label: 'Anuluj' }]), { size: 12 });
   }
 }
 
@@ -34,6 +38,9 @@ await Promise.race([
   new Promise(r => setTimeout(r, 2500)),
 ]);
 
+// przeglądarki pozwalają grać dźwięk dopiero po dotknięciu ekranu
+window.addEventListener('pointerdown', initAudio);
+
 const game = new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'game',
@@ -41,6 +48,6 @@ const game = new Phaser.Game({
   backgroundColor: '#070a18',
   pixelArt: true,
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
-  scene: [TitleScene, NightScene, DevelopScene, AlbumScene, ScanScene, DawnScene],
+  scene: [TitleScene, NightScene, DevelopScene, AlbumScene, ScanScene, DawnScene, ConsScene],
 });
 window.__game = game; // do podglądania stanu w konsoli

@@ -25,6 +25,8 @@ Potem otwórz http://localhost:8123. Na telefonie: wrzuć folder na GitHub Pages
 - `src/AlbumScene.js` – album z naklejkami
 - `src/ScanScene.js` – skanowanie nieba
 - `src/DawnScene.js` – świt między nocami
+- `src/ConsScene.js` – Mapa Nieba (łączenie gwiazdozbiorów)
+- `src/audio.js` – muzyka i efekty dźwiękowe (Web Audio)
 
 ## Opis projektu
 

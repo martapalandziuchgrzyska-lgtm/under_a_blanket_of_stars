@@ -1,13 +1,14 @@
-// Taras, domy i niebo. Wszystko siedzi w kontenerze o skali 2 (jednostki sceny: 180 x 236).
-// Niebo zajmuje górne trzy czwarte, taras jest wąskim pasem na dole.
+// Taras, domy i niebo. Wszystko siedzi w kontenerze o skali 2, przesuniętym w dół o DY jednostek:
+// y = 0 to dawna góra sceny, niebo sięga do y = -DY. Scena ma 180 x 291 jednostek (360 x 582 px).
 import Phaser from '../lib/phaser.esm.min.js';
-import { NEIGHBORS, HOUSES, OBJ, seasonObjects, CONSTELLATIONS } from './data.js';
+import { NEIGHBORS, HOUSES, OBJ, seasonObjects } from './data.js';
 import { S, darkness, lightsOff, nightNo, season, guests, eventTonight, eclipseNow, blocked, ost, moonPhase, moonTex } from './state.js';
 import { rng } from './art.js';
 
 const ADD = Phaser.BlendModes.ADD;
 const BASE = 182, FENCE = 178, GARLAND = 140; // podstawa domów, góra płotu, góra słupków z lampkami
-const MOON = { x: 150, y: 52 };
+export const DY = 55; // o tyle jednostek niebo jest wyższe niż w układzie 360x640
+const MOON = { x: 150, y: 12 };
 
 // Stałe miejsca obiektów: rozsiane losowo po całym niebie (z zachowaniem odstępów), inne w każdej porze roku.
 const layouts = {};
@@ -17,7 +18,7 @@ function layout(s) {
   for (const o of seasonObjects(s)) {
     if (o.id === 'moon') { pts.moon = MOON; continue; }
     let p, tries = 0;
-    do { p = { x: 16 + r() * 148, y: 36 + r() * 82 }; tries++; } while (tries < 300 && placed.some(q => Math.hypot(q.x - p.x, q.y - p.y) < 27));
+    do { p = { x: 16 + r() * 148, y: 40 - DY + r() * (78 + DY) }; tries++; } while (tries < 400 && placed.some(q => Math.hypot(q.x - p.x, q.y - p.y) < 31));
     placed.push(p); pts[o.id] = p;
   }
   return (layouts[s] = pts);
@@ -27,7 +28,7 @@ export const skyPos = id => layout(OBJ[id].s)[id];
 export class World {
   constructor(scene, handlers = {}) {
     this.s = scene; this.h = handlers;
-    const c = this.c = scene.add.container(0, 0).setScale(2);
+    const c = this.c = scene.add.container(0, DY * 2).setScale(2);
     // tekstury świata mają podwójną gęstość, stąd skala 0.5
     const img = (x, y, key, into = c) => { const i = scene.add.image(x, y, key).setOrigin(0).setScale(0.5); into.add(i); return i; };
     const rect = (x, y, w, h, col, a = 1, into = c) => { const r = scene.add.rectangle(x, y, w, h, col, a).setOrigin(0); into.add(r); return r; };
@@ -36,26 +37,16 @@ export class World {
     this.layers = [];
     const tile = (y, h, key, v, k, ky, wrapY) => { const t = scene.add.tileSprite(0, y, 360, h, key).setOrigin(0).setScale(0.5); c.add(t); this.layers.push({ t, v, k, ky, wrapY, y0: y }); return t; };
 
-    img(0, 0, 'sky');
-    this.milky = tile(0, 380, 'milky', 1.2, 3, 4, true);
-    this.st = [tile(0, 380, 'stars1', 2.4, 5, 7, true), tile(0, 380, 'stars2', 1.7, 3.5, 5, true), tile(0, 380, 'stars3', 1.1, 2, 3, true)];
+    img(0, -DY, 'sky');
+    this.milky = tile(-DY, 490, 'milky', 1.2, 3, 4, true);
+    this.st = [tile(-DY, 490, 'stars1', 2.4, 5, 7, true), tile(-DY, 490, 'stars2', 1.7, 3.5, 5, true), tile(-DY, 490, 'stars3', 1.1, 2, 3, true)];
     scene.tweens.add({ targets: this.st[0], alpha: 0.7, duration: 1700, yoyo: true, repeat: -1 });
 
-    // gwiazdozbiory, Księżyc i obiekty sezonu
+    // Księżyc i obiekty sezonu
     const objs = this.objs = scene.add.container(0, 0); c.add(objs);
-    const g = this.cons = scene.add.graphics(); objs.add(g);
-    for (const con of CONSTELLATIONS[season()]) {
-      g.lineStyle(0.5, 0x9fb4ff, 0.7);
-      for (const [a, b] of con.edges) g.lineBetween(con.pts[a][0], con.pts[a][1], con.pts[b][0], con.pts[b][1]);
-      g.fillStyle(0xffffff, 1);
-      for (const [x, y] of con.pts) g.fillRect(x - 0.75, y - 0.75, 1.5, 1.5);
-      const lx = con.pts.reduce((m, q) => m + q[0], 0) / con.pts.length, ly = Math.max(...con.pts.map(q => q[1])) + 4;
-      const lab = scene.add.text(lx, ly, con.name.toUpperCase(), { fontFamily: 'Nunito, Verdana, sans-serif', fontSize: '5px', color: '#9fb4ff', letterSpacing: 1 }).setOrigin(0.5, 0).setResolution(5).setAlpha(0.8);
-      objs.add(lab); (this.conLabels ||= []).push(lab);
-    }
     this.moon = scene.add.image(MOON.x, MOON.y, 'moon6').setScale(0.5).setInteractive(); objs.add(this.moon);
     this.moon.on('pointerdown', () => this.h.pick && this.h.pick(season() === 0 ? 'moon' : 'phase'));
-    this.comet = img(46, 44, 'comet_sky', objs).setVisible(false).setOrigin(0.12, 0.75);
+    this.comet = img(46, 4, 'comet_sky', objs).setVisible(false).setOrigin(0.12, 0.75);
     this.sky = {};
     for (const o of seasonObjects(season())) {
       if (o.id === 'moon') continue; // jesienią obiektem jest sam Księżyc
@@ -64,14 +55,24 @@ export class World {
       objs.add(im); this.sky[o.id] = im;
     }
     this.targetRing = scene.add.rectangle(0, 0, 26, 26).setStrokeStyle(1, 0xffc65a, 0.8).setVisible(false); objs.add(this.targetRing);
-    this.shoot = scene.add.rectangle(0, 0, 12, 0.6, 0xffffff).setAlpha(0); objs.add(this.shoot);
+    // spadająca gwiazda: smuga + niewidoczna strefa dotyku, która leci razem z nią
+    this.shoot = scene.add.rectangle(0, 0, 14, 0.8, 0xffffff).setAlpha(0); objs.add(this.shoot);
+    this.shootHit = scene.add.circle(0, 0, 13, 0xffffff, 0.001).setInteractive(); objs.add(this.shootHit);
+    this.shootHit.on('pointerdown', () => {
+      if (this.shoot.alpha < 0.05 || !this.h.wish) return;
+      const f = scene.add.circle(this.shoot.x, this.shoot.y, 3, 0xffe9a8); objs.add(f);
+      scene.tweens.add({ targets: f, scale: 5, alpha: 0, duration: 450, onComplete: () => f.destroy() });
+      scene.tweens.killTweensOf([this.shoot, this.shootHit]); this.shoot.setAlpha(0); this.shootHit.setPosition(-50, -50);
+      this.h.wish();
+    });
 
+    tile(-10, 150, 'pclouds', 3, 7, 2);
     tile(60, 150, 'pclouds', 4, 9, 2.5);
     tile(BASE - 80, 160, 'city', 0, 12, 1.2);
     this.cityw = tile(BASE - 80, 160, 'cityw', 0, 12, 1.2);
     this.poll = img(0, 0, 'pollution');
     this.clouds = [];
-    for (let i = 0; i < 6; i++) this.clouds.push(img(-80, 10 + i * 17, 'cloud').setAlpha(0));
+    for (let i = 0; i < 8; i++) this.clouds.push(img(-80, 10 + i * 17, 'cloud').setAlpha(0));
 
     // domy z ich światłami: osobna grupa, żeby przesuwała się razem
     const hg = this.hg = scene.add.container(0, 0); c.add(hg);
@@ -134,7 +135,7 @@ export class World {
       t += dt / 1000;
       const ptr = scene.input.activePointer, e = Math.min(1, dt / 500);
       off += ((moved ? Phaser.Math.Clamp((ptr.worldX / 360 - 0.5) * 2, -1, 1) : 0) - off) * e;
-      offY += ((moved ? Phaser.Math.Clamp((ptr.worldY / 472 - 0.5) * 2, -1, 1) : 0) - offY) * e;
+      offY += ((moved ? Phaser.Math.Clamp((ptr.worldY / (472 + DY * 2) - 0.5) * 2, -1, 1) : 0) - offY) * e;
       for (const l of this.layers) {
         l.t.tilePositionX = t * l.v + off * l.k;
         if (l.wrapY) l.t.tilePositionY = offY * l.ky; else l.t.y = l.y0 - offY * l.ky;
@@ -144,11 +145,13 @@ export class World {
     };
     scene.events.on('update', upd);
     // co jakiś czas przez niebo przelatuje spadająca gwiazda (tylko ozdoba)
-    const shootEv = scene.time.addEvent({ delay: 9000, loop: true, callback: () => {
-      if (Math.random() < 0.45) return;
-      const x = 20 + Math.random() * 130, y = 30 + Math.random() * 70, dir = Math.random() < 0.5 ? 1 : -1;
-      this.shoot.setPosition(x, y).setRotation(dir > 0 ? 0.5 : Math.PI - 0.5).setAlpha(0.9);
-      scene.tweens.add({ targets: this.shoot, x: x + dir * 34, y: y + 18, alpha: 0, duration: 650, ease: 'Quad.easeOut' });
+    const shootEv = scene.time.addEvent({ delay: 7000, loop: true, callback: () => {
+      if (Math.random() < 0.5 || this.shoot.alpha > 0.05) return;
+      const x = 24 + Math.random() * 120, y = 10 - DY + Math.random() * (70 + DY), dir = Math.random() < 0.5 ? 1 : -1;
+      this.shoot.setPosition(x, y).setRotation(dir > 0 ? 0.45 : Math.PI - 0.45).setAlpha(0.95);
+      this.shootHit.setPosition(x, y);
+      scene.tweens.add({ targets: [this.shoot, this.shootHit], x: x + dir * 46, y: y + 22, duration: 1500, ease: 'Sine.easeOut' });
+      scene.tweens.add({ targets: this.shoot, alpha: 0, delay: 1000, duration: 500, onComplete: () => this.shootHit.setPosition(-50, -50) });
     } });
     scene.events.once('shutdown', () => { scene.events.off('update', upd); shootEv.remove(); });
     this.refresh();
@@ -161,8 +164,6 @@ export class World {
     this.milky.setAlpha(season() === 3 ? Math.max(0.1, Math.min(1, (d - 1) / 4)) : Math.max(0, Math.min(0.6, (d - 2) / 6)));
     this.cityw.setAlpha(Math.max(0.25, 1 - (raw - 2) / 6));
     this.poll.setAlpha(Math.max(0.06, 1 - (raw - 2) / 5.2) * (S.lamps ? 1 : 0.85));
-    const ca = Math.max(0.12, Math.min(0.75, 0.1 + d * 0.11));
-    this.cons.setAlpha(ca); (this.conLabels || []).forEach(l => l.setAlpha(ca * 0.9));
     for (const n of NEIGHBORS) for (const p of this.lights[n.id]) p.setVisible(!S.nb[n.id].off);
     const late = S.cur ? S.cur.b : 0;
     this.anon.forEach((w, i) => w.setVisible(i >= lightsOff() && late < 3 + i));
@@ -186,7 +187,7 @@ export class World {
   }
 
   setTarget(id, quiet) {
-    const p = id === 'comet' ? { x: 52, y: 52 } : id === 'eclipse' || id === 'phase' ? MOON : OBJ[id] ? skyPos(id) : null;
+    const p = id === 'comet' ? { x: 52, y: 12 } : id === 'eclipse' || id === 'phase' ? MOON : OBJ[id] ? skyPos(id) : null;
     if (!p) { this.targetRing.setVisible(false); this.tp = null; return; } // odpoczynek, skan, wywoływanie, poczta...
     this.targetRing.setPosition(p.x, p.y).setVisible(true);
     const ang = Math.atan2(p.y - 191, p.x - 111.5);
@@ -203,11 +204,11 @@ export class World {
   blockFx(kind, act, done) {
     const s = this.s, dur = 2400;
     if (act !== 'clear') {
-      const n = act === 'cloud' ? 6 : 3, a = act === 'cloud' ? 0.92 : 0.45;
-      this.clouds.slice(0, n).forEach((cl, i) => { cl.setPosition(-70 - i * 22, 6 + ((i * 37) % 112)).setAlpha(a); s.tweens.add({ targets: cl, x: 200 + i * 6, duration: dur + 1400 + i * 300, onComplete: () => cl.setAlpha(0) }); });
+      const n = act === 'cloud' ? 8 : 4, a = act === 'cloud' ? 0.92 : 0.45;
+      this.clouds.slice(0, n).forEach((cl, i) => { cl.setPosition(-70 - i * 22, 4 - DY + ((i * 47) % (118 + DY))).setAlpha(a); s.tweens.add({ targets: cl, x: 200 + i * 6, duration: dur + 1400 + i * 300, onComplete: () => cl.setAlpha(0) }); });
     }
     if (kind === 'ok' || kind === 'event') {
-      const p = this.tpos || { x: 90, y: 50 };
+      const p = this.tpos || { x: 90, y: 20 };
       for (let i = 0; i < 16; i++) s.time.delayedCall(i * 120, () => {
         const m = s.add.image(p.x + (Math.random() - 0.5) * 12, p.y + (Math.random() - 0.5) * 12, 'mote').setTint(0xffe9a8).setBlendMode(ADD);
         this.fx.add(m);

@@ -3,6 +3,7 @@ import Phaser from '../lib/phaser.esm.min.js';
 import { OBJ, TYPES } from './data.js';
 import { S, ost, develop, devBlockDone, tier, maxP } from './state.js';
 import { W, H, setupCam, txt, button, slider } from './ui.js';
+import { sfx } from './audio.js';
 
 const ADD = Phaser.BlendModes.ADD;
 const CX = W / 2, CY = 220, SC = 4; // kadr 192x192
@@ -126,6 +127,7 @@ export class DevelopScene extends Phaser.Scene {
     this.finished = true;
     let stars = e <= this.tol ? 3 : e <= this.tol * 2.6 ? 2 : 1;
     const res = develop(this.id, stars), capped = stars > res.stars;
+    sfx('jingle');
     stars = res.stars;
     if (this.block) devBlockDone();
     this.back.c.destroy();

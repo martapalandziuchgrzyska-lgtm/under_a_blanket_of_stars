@@ -1,7 +1,9 @@
 // Album: strony na pory roku + wyczyny. Nowe zdjęcie gracz sam przeciąga na jego miejsce.
 import Phaser from '../lib/phaser.esm.min.js';
-import { OBJ, SEASONS, TYPES, FEATS, GIFTS, seasonObjects } from './data.js';
-import { S, ost, paste, season } from './state.js';
+import { OBJ, SEASONS, TYPES, FEATS, GIFTS, CONS, seasonObjects } from './data.js';
+import { fitPoints } from './ConsScene.js';
+import { sfx } from './audio.js';
+import { S, ost, paste, season, conUnlocked } from './state.js';
 import { W, H, setupCam, txt, button, toast, dialog, overlay, panel } from './ui.js';
 
 const COLS = 4, CW = 84, CH = 106, X0 = 54, Y0 = 130;
@@ -16,14 +18,14 @@ export class AlbumScene extends Phaser.Scene {
     this.add.rectangle(W / 2, H / 2, W, H, 0x2e2028);
     this.add.rectangle(W / 2, H / 2 + 14, W - 12, H - 76, 0xf6ead0).setStrokeStyle(2, 0x8a6450);
     for (let y = 80; y < H - 40; y += 34) this.add.circle(14, y, 3, 0x2e2028);
-    ['Jesień', 'Zima', 'Wiosna', 'Lato', '★'].forEach((n, i) => {
+    ['Jesień', 'Zima', 'Wiosna', 'Lato', '★', 'Mapa'].forEach((n, i) => {
       const on = i === this.page;
-      const b = button(this, 38 + i * 71, 24, 66, 30, n, () => { if (!this.pasteId && i !== this.page) this.scene.restart({ page: i }); }, { fill: on ? 0xf6ead0 : 0x4a3238, stroke: 0x8a6450, color: on ? '#2e2028' : '#f6ead0', size: 12 });
+      const b = button(this, 33 + i * 59, 24, 55, 30, n, () => { if (!this.pasteId && i !== this.page) this.scene.restart({ page: i }); }, { fill: on ? 0xf6ead0 : 0x4a3238, stroke: 0x8a6450, color: on ? '#2e2028' : '#f6ead0', size: 12 });
       if (this.pasteId && !on) b.c.setAlpha(0.4);
     });
     this.info = txt(this, W / 2, 522, '', { size: 10, ox: 0.5, color: '#4a3238', align: 'center', wrap: 320 });
     this.slotPos = {};
-    if (this.page < 4) this.photoPage(); else this.featPage();
+    if (this.page < 4) this.photoPage(); else if (this.page === 4) this.featPage(); else this.consPage();
     if (this.pasteId) this.startPaste();
     else button(this, W / 2, H - 30, 180, 36, 'Wróć na taras', () => this.scene.start('Night'), { fill: 0x8a3a56, stroke: 0xe88a9a });
   }
@@ -58,6 +60,23 @@ export class AlbumScene extends Phaser.Scene {
     c.setRotation(((o.id.charCodeAt(0) + o.id.length) % 7 - 3) * 0.012);
     if (interactive) { fr.setInteractive(); fr.on('pointerdown', () => this.card(o, a)); }
     return c;
+  }
+
+  // Gwiazdozbiory: połączone mają linie, pozostałe to same kropki
+  consPage() {
+    txt(this, W / 2, 56, `Gwiazdozbiory · ${CONS.filter(c => S.cons[c.id]).length}/${CONS.length}`, { size: 12, ox: 0.5, color: '#4a3238', style: '800' });
+    CONS.forEach((con, k) => {
+      const p = this.cell(k), got = !!S.cons[con.id], open = !got && conUnlocked(con), pts = fitPoints(con.pts, 70, 0.12);
+      const bg = this.add.rectangle(p.x, p.y, 74, 74, got ? 0x12163c : open ? 0x1e2456 : 0x2e3358).setStrokeStyle(open ? 2 : 1, got || open ? 0xffc65a : 0xb8a888).setRounded(8);
+      if (open) { bg.setInteractive({ useHandCursor: true }); bg.on('pointerdown', () => this.scene.start('Cons', { id: con.id })); this.tweens.add({ targets: bg, alpha: 0.75, duration: 700, yoyo: true, repeat: -1 }); }
+      else if (!got) { bg.setInteractive(); bg.on('pointerdown', () => this.info.setText(`${con.name}: sfotografuj coś z tego gwiazdozbioru,\nnp. ${con.members.map(id => OBJ[id].short).join(', ')}.`)); }
+      const g = this.add.graphics();
+      if (got) { g.lineStyle(1.5, 0xffe9a8, 0.95); for (const [a, b] of con.edges) g.lineBetween(p.x - 35 + pts[a][0], p.y - 35 + pts[a][1], p.x - 35 + pts[b][0], p.y - 35 + pts[b][1]); }
+      g.fillStyle(0xffffff, got ? 1 : 0.6);
+      for (const [x, y] of pts) g.fillCircle(p.x - 35 + x, p.y - 35 + y, got ? 2 : 1.5);
+      txt(this, p.x, p.y + 40, open ? con.name + ' ✎' : con.name, { size: 8, ox: 0.5, color: got || open ? '#4a3238' : '#a89878' });
+    });
+    this.info.setText('Zdjęcie obiektu z gwiazdozbioru odblokowuje jego wzór.\nŚwiecące pola stuknij i połącz gwiazdy palcem.');
   }
 
   // Karta zdjęcia: duży kadr, notatka i ciekawostka
@@ -102,7 +121,7 @@ export class AlbumScene extends Phaser.Scene {
       if (Math.hypot(obj.x - p.x, obj.y - p.y) < 50) {
         obj.disableInteractive(); hl.destroy(); tray.destroy();
         this.tweens.add({ targets: obj, x: p.x, y: p.y, duration: 150, onComplete: () => this.cameras.main.shake(80, 0.004) });
-        const gift = paste(o.id);
+        const gift = paste(o.id); sfx('stick');
         this.info.setText('Wklejone!');
         while (S.toasts.length) toast(this, S.toasts.shift(), 300 - S.toasts.length * 40);
         const back = () => button(this, W / 2, H - 30, 180, 36, 'Wróć na taras', () => this.scene.start('Night'), { fill: 0x8a3a56, stroke: 0xe88a9a }).c.setDepth(20);

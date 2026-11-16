@@ -1,5 +1,8 @@
-// Pomocnicze elementy interfejsu. Współrzędne logiczne: 360x640 (kamera ma zoom 2, grafika pixel-art skalę 2).
-export const W = 360, H = 640;
+// Pomocnicze elementy interfejsu. Współrzędne logiczne: 360x780 (kamera ma zoom 2, grafika pixel-art skalę 2).
+import { sfx } from './audio.js';
+
+export const W = 360, H = 780;
+export const PY = 582; // góra dolnego panelu: wyżej jest scena (niebo i taras)
 // Nunito: zaokrąglony font interfejsu; Patrick Hand: odręczne liściki. Oba ładuje index.html (Google Fonts).
 export const FONT = 'Nunito, Verdana, Geneva, sans-serif';
 export const SERIF = '"Patrick Hand", Georgia, serif';
@@ -22,7 +25,7 @@ export function button(scene, x, y, w, h, label, cb, o = {}) {
   c.add([r, t]);
   let enabled = true;
   r.setInteractive({ useHandCursor: true });
-  r.on('pointerdown', () => { if (!enabled) return; scene.tweens.add({ targets: c, scale: 0.94, duration: 60, yoyo: true }); cb(); });
+  r.on('pointerdown', () => { if (!enabled) return; sfx('tap'); scene.tweens.add({ targets: c, scale: 0.94, duration: 60, yoyo: true }); cb(); });
   return {
     c, r, t,
     setLabel(s) { t.setText(s); return this; },
@@ -46,14 +49,15 @@ export function panel(scene, x, y, w, h, fill = 0x121a3a, stroke = 0x8fb8ff) {
 export function dialog(scene, title, body, buttons, o = {}) {
   const c = overlay(scene, o.depth ?? 200);
   const w = 300, tb = txt(scene, W / 2, 0, body, { wrap: w - 36, ox: 0.5, font: o.serif ? SERIF : FONT, size: o.serif ? 15 : 12, style: o.serif ? 'normal' : '', color: o.serif ? '#3a2a2e' : '#f6ead0', ls: 4 });
-  const h = tb.height + 96 + (title ? 0 : -20), y0 = H / 2 - h / 2;
+  const stack = o.stack ? (buttons.length - 1) * 38 : 0; // przyciski jeden pod drugim
+  const h = tb.height + 96 + (title ? 0 : -20) + stack, y0 = H / 2 - h / 2;
   c.add(panel(scene, W / 2, H / 2, w, h, o.serif ? 0xf6ead0 : 0x121a3a, o.serif ? 0xe88a3a : 0x8fb8ff));
   if (title) c.add(txt(scene, W / 2, y0 + 14, title, { size: 15, ox: 0.5, color: o.serif ? '#8a3a56' : '#ffc65a', style: '800' }));
   tb.setY(y0 + (title ? 40 : 20)); c.add(tb);
-  const bw = buttons.length > 1 ? 130 : 160;
+  const bw = o.stack ? 240 : buttons.length > 1 ? 130 : 160;
   buttons.forEach((b, i) => {
-    const bx = W / 2 + (i - (buttons.length - 1) / 2) * (bw + 10);
-    c.add(button(scene, bx, y0 + h - 28, bw, 32, b.label, () => { c.destroy(); b.cb && b.cb(); }, { fill: i === 0 ? 0x8a3a56 : 0x2a3a6e, stroke: i === 0 ? 0xe88a9a : 0x8fb8ff }).c);
+    const bx = o.stack ? W / 2 : W / 2 + (i - (buttons.length - 1) / 2) * (bw + 10), by = o.stack ? y0 + h - 28 - (buttons.length - 1 - i) * 38 : y0 + h - 28;
+    c.add(button(scene, bx, by, bw, 32, b.label, () => { c.destroy(); b.cb && b.cb(); }, { fill: i === 0 ? 0x8a3a56 : 0x2a3a6e, stroke: i === 0 ? 0xe88a9a : 0x8fb8ff }).c);
   });
   return c;
 }

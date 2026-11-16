@@ -3,8 +3,9 @@ import Phaser from '../lib/phaser.esm.min.js';
 import { TYPES } from './data.js';
 import { S, scanCandidates, scanDone } from './state.js';
 import { W, H, setupCam, txt, button } from './ui.js';
+import { sfx } from './audio.js';
 
-const FX = 20, FY = 64, FW = 320, FH = 400; // pole widzenia
+const FX = 20, FY = 64, FW = 320, FH = H - 250; // pole widzenia
 const HEAT = ['zimno', 'chłodno', 'cieplej', 'ciepło', 'gorąco!'];
 
 export class ScanScene extends Phaser.Scene {
@@ -64,7 +65,7 @@ export class ScanScene extends Phaser.Scene {
   win() {
     this.found = true;
     const o = this.o;
-    scanDone(o.id);
+    scanDone(o.id); sfx('found');
     this.back.c.destroy(); this.arc.clear();
     this.setFinder(this.pos.x, this.pos.y);
     this.ring.setStrokeStyle(2, 0x8fe8a8, 1);

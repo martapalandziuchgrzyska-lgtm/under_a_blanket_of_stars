@@ -43,7 +43,7 @@ export const OBJECTS = [
   O('rosette', 'Mgławica Rozeta', 'Rozeta', 'nebula', 1, 4, 4, 'Róża z dziurą w środku.', { k: 'nebula', shape: 'ring', c1: '#e04a60', c2: '#ff8a9a', R: 15, thick: 6 }),
   O('horse', 'Mgławica Koński Łeb', 'Koński Łeb', 'nebula', 1, 4, 4, 'Najtrudniejszy obiekt zimy.', { k: 'nebula', shape: 'horse', c1: '#d8405a', c2: '#6f9ae0' }),
   // --- Wiosna
-  O('venus', 'Wenus', 'Wenus', 'planet', 2, 1, 1, 'Tylko w pierwszych blokach, potem zachodzi.', { k: 'planet', c: '#fff6e0', r: 9, crescent: true }, { win: [1, 2] }),
+  O('venus', 'Wenus', 'Wenus', 'planet', 2, 1, 1, 'Tylko w pierwszych godzinach, potem zachodzi.', { k: 'planet', c: '#fff6e0', r: 9, crescent: true }, { win: [1, 2] }),
   O('mizar', 'Mizar i Alkor', 'Mizar i Alkor', 'double', 2, 1, 1, 'W dyszlu Wielkiego Wozu.', { k: 'double', c1: '#ffffff', c2: '#dfe8ff', sep: 5 }),
   O('m44', 'Żłóbek (M44)', 'Żłóbek', 'cluster', 2, 2, 1, 'Rój pszczół.', { k: 'cluster', n: 40, spread: 14 }),
   O('m3', 'M3', 'M3', 'globular', 2, 2, 2, 'Pół miliona gwiazd w jednej kuli.', { k: 'cluster', glob: true, n: 110, spread: 7 }),
@@ -117,7 +117,7 @@ export const NB = Object.fromEntries(NEIGHBORS.map(n => [n.id, n]));
 export const FEATS = [
   { id: 'first', name: 'Pierwsza naklejka', sym: '1', color: '#5a7ac8', hint: 'Wklej pierwsze zdjęcie.' },
   { id: 'streak', name: 'Seria', sym: '≡', color: '#c8a030', hint: 'Zbierz obiekt jednym ciągiem.' },
-  { id: 'perfect', name: 'Idealna noc', sym: '8/8', color: '#3a9a8a', hint: 'Wykorzystaj wszystkie 8 bloków.' },
+  { id: 'perfect', name: 'Idealna noc', sym: '8/8', color: '#3a9a8a', hint: 'Wykorzystaj wszystkie 8 godzin.' },
   { id: 'lucky', name: 'Łut szczęścia', sym: '☘', color: '#4a9a4a', hint: 'Zostań mimo złej prognozy.' },
   { id: 'iss', name: 'Stacja kosmiczna', sym: '✦', color: '#8a8ab8', hint: 'Jesień: stuknij w porę.' },
   { id: 'geminids', name: 'Geminidy', sym: '☄', color: '#5a6ad0', hint: 'Zima: noc spadających gwiazd.' },
@@ -145,25 +145,26 @@ export const FORECAST_W = [[0.5, 0.3, 0.2], [0.45, 0.3, 0.25], [0.5, 0.3, 0.2], 
 export const EVENTS = {
   iss: { s: 0, nights: [2, 7] },
   geminids: { s: 1, night: 8 },
-  eclipse: { s: 2, night: 4, blocks: [3, 4] },
+  eclipse: { s: 2, night: 5, blocks: [3, 4] },
   perseids: { s: 3, night: 3 },
   comet: { s: 3, night: 11 },
 };
 
-// Fazy Księżyca: cykl trwa jedną porę roku (12 nocy). Pora zaczyna się wąskim sierpem,
-// pełnia wypada w 5. noc, nów w 11. Indeks fazy: 0 = nów, 6 = pełnia.
-export const moonIndex = night => (night + 2) % 12;
+// Fazy Księżyca: cykl trwa jedną porę roku (12 nocy), bez faz garbatych, żeby niebo rzadko było rozjaśnione.
+// MOON_SEQ[noc] = numer tekstury (0 nów, 2 sierp, 3 pierwsza połowa, 6 pełnia, 9 druga połowa, 10 drugi sierp).
+export const MOON_SEQ = [2, 2, 3, 3, 3, 6, 9, 9, 9, 10, 10, 0];
+export const moonIndex = night => MOON_SEQ[night % MOON_SEQ.length];
 export const PHASES = [
-  // nights = indeksy fazy, nie numery nocy
-  { id: 'ph_cres', name: 'Sierp', nights: [1, 2, 10, 11] },
-  { id: 'ph_q1', name: 'Pierwsza kwadra', nights: [3] },
-  { id: 'ph_gib', name: 'Garbaty Księżyc', nights: [4, 5, 7, 8] },
-  { id: 'ph_full', name: 'Pełnia', nights: [6] },
-  { id: 'ph_q3', name: 'Ostatnia kwadra', nights: [9] },
+  { id: 'ph_cres', name: 'Sierp', idx: 2 },
+  { id: 'ph_q1', name: 'Pierwsza połowa', idx: 3 },
+  { id: 'ph_full', name: 'Pełnia', idx: 6 },
+  { id: 'ph_q3', name: 'Druga połowa', idx: 9 },
+  { id: 'ph_cres2', name: 'Drugi sierp', idx: 10 },
 ];
-export const phaseOf = night => PHASES.find(p => p.nights.includes(moonIndex(night))) || null; // null = nów
-export const brightMoon = night => [5, 6, 7].includes(moonIndex(night)); // okolice pełni: niebo jaśniejsze o 1
+export const phaseOf = night => PHASES.find(p => p.idx === moonIndex(night)) || null; // null = nów
+export const brightMoon = night => moonIndex(night) === 6; // tylko pełnia rozjaśnia niebo o 1
 for (const p of PHASES) FEATS.push({ id: p.id, name: p.name, sym: '☾', color: '#7a80b8', hint: 'Sfotografuj Księżyc w tej fazie.' });
+FEATS.push({ id: 'wish', name: 'Odłamek życzenia', sym: '✧', color: '#c87ab0', hint: 'Złap spadającą gwiazdę.' });
 
 // Ciekawostki do przeczytania na wywołanym zdjęciu
 const FACTS = {
@@ -227,14 +228,24 @@ export const DIARY = [
   ['Noce są krótkie i ciepłe. Koc bardziej dla zasady.', 'Droga Mleczna stoi nad tarasem. Rok temu nie było jej widać.', 'Pani Helena przyniosła szarlotkę i krzesło. Zostaje.', 'Leżaki sąsiadów stoją u mnie na stałe. Niech stoją.', 'Świerszcze. Tyle świerszczy.', 'Ktoś zapytał, czy mogą zgasić latarnię na rogu. Podobno się da.', 'Antek zasnął na leżaku z lornetką na brzuchu.', 'Pan Ryszard mówi, że niebo jest „niczego sobie”. To u niego owacja.', 'Kometę widać już w lornetce. Mały kłębek.', 'Wszyscy pytają, o której przyjść. Mówię: jak zrobi się ciemno.', 'Jutro. Upiekłam ciasto, pierwszy raz w tym domu.', 'Rok temu nie znałam tu nikogo.'],
 ];
 
-// Gwiazdozbiory rysowane liniami w tle nieba (współrzędne sceny), po dwa na porę roku
-export const CONSTELLATIONS = [
-  [{ name: 'Kasjopeja', pts: [[16, 62], [26, 74], [35, 64], [45, 76], [54, 66]], edges: [[0, 1], [1, 2], [2, 3], [3, 4]] },
-   { name: 'Pegaz', pts: [[98, 84], [124, 78], [130, 104], [104, 110], [84, 72], [72, 78]], edges: [[0, 1], [1, 2], [2, 3], [3, 0], [0, 4], [4, 5]] }],
-  [{ name: 'Orion', pts: [[36, 58], [60, 54], [44, 76], [49, 75], [54, 74], [34, 98], [64, 94], [48, 44]], edges: [[0, 1], [0, 2], [1, 4], [2, 3], [3, 4], [2, 5], [4, 6], [0, 7], [1, 7]] },
-   { name: 'Bliźnięta', pts: [[108, 50], [114, 70], [118, 92], [124, 46], [132, 66], [140, 86]], edges: [[0, 1], [1, 2], [3, 4], [4, 5], [0, 3], [1, 4]] }],
-  [{ name: 'Wielki Wóz', pts: [[14, 66], [28, 60], [40, 64], [52, 72], [54, 88], [72, 90], [74, 74]], edges: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 3]] },
-   { name: 'Lew', pts: [[104, 62], [112, 54], [120, 58], [118, 70], [106, 76], [140, 84], [150, 76]], edges: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 3]] }],
-  [{ name: 'Łabędź', pts: [[58, 44], [63, 62], [68, 80], [74, 102], [42, 70], [88, 54]], edges: [[0, 1], [1, 2], [2, 3], [4, 1], [1, 5]] },
-   { name: 'Lutnia', pts: [[122, 56], [126, 68], [134, 70], [132, 84], [124, 82]], edges: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 1]] }],
+// Gwiazdozbiory do połączenia w albumie (minigierka), po trzy na porę roku. Punkty w dowolnej skali.
+const C = (id, name, s, pts, edges) => ({ id, name, s, pts, edges });
+export const CONS = [
+  C('cas', 'Kasjopeja', 0, [[16, 62], [26, 74], [35, 64], [45, 76], [54, 66]], [[0, 1], [1, 2], [2, 3], [3, 4]]),
+  C('peg', 'Pegaz', 0, [[98, 84], [124, 78], [130, 104], [104, 110], [84, 72], [72, 78]], [[0, 1], [1, 2], [2, 3], [3, 0], [0, 4], [4, 5]]),
+  C('per', 'Perseusz', 0, [[50, 10], [46, 28], [40, 44], [30, 58], [22, 72], [56, 46], [68, 56], [78, 70]], [[0, 1], [1, 2], [2, 3], [3, 4], [2, 5], [5, 6], [6, 7]]),
+  C('ori', 'Orion', 1, [[36, 58], [60, 54], [44, 76], [49, 75], [54, 74], [34, 98], [64, 94], [48, 44]], [[0, 1], [0, 2], [1, 4], [2, 3], [3, 4], [2, 5], [4, 6], [0, 7], [1, 7]]),
+  C('gem', 'Bliźnięta', 1, [[108, 50], [114, 70], [118, 92], [124, 46], [132, 66], [140, 86]], [[0, 1], [1, 2], [3, 4], [4, 5], [0, 3], [1, 4]]),
+  C('tau', 'Byk', 1, [[10, 10], [34, 36], [44, 48], [52, 56], [60, 50], [70, 42], [92, 14], [50, 72]], [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [3, 7]]),
+  C('uma', 'Wielki Wóz', 2, [[14, 66], [28, 60], [40, 64], [52, 72], [54, 88], [72, 90], [74, 74]], [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 3]]),
+  C('leo', 'Lew', 2, [[104, 62], [112, 54], [120, 58], [118, 70], [106, 76], [140, 84], [150, 76]], [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 3]]),
+  C('boo', 'Wolarz', 2, [[50, 90], [36, 60], [30, 34], [46, 12], [66, 30], [62, 58]], [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 0], [1, 5]]),
+  C('cyg', 'Łabędź', 3, [[58, 44], [63, 62], [68, 80], [74, 102], [42, 70], [88, 54]], [[0, 1], [1, 2], [2, 3], [4, 1], [1, 5]]),
+  C('lyr', 'Lutnia', 3, [[122, 56], [126, 68], [134, 70], [132, 84], [124, 82]], [[0, 1], [1, 2], [2, 3], [3, 4], [4, 1]]),
+  C('aql', 'Orzeł', 3, [[50, 40], [42, 30], [58, 50], [20, 52], [80, 24], [50, 78]], [[1, 0], [0, 2], [0, 3], [0, 4], [0, 5]]),
 ];
+// Obiekty leżące w danym gwiazdozbiorze (albo tuż obok): zdjęcie któregoś z nich odblokowuje wzór na Mapie Nieba.
+const MEMBERS = { cas: ['owl', 'heart'], peg: ['m15', 'm31'], per: ['dblcl', 'm33'], ori: ['m42', 'flame', 'horse'], gem: ['m35', 'jupiter'], tau: ['m45', 'm1'],
+  uma: ['mizar', 'm81', 'm101', 'm51'], leo: ['leo3', 'm44'], boo: ['m3'], cyg: ['albireo', 'veil'], lyr: ['m57'], aql: ['m11', 'hanger'] };
+for (const c of CONS) c.members = MEMBERS[c.id];
+export const CON = Object.fromEntries(CONS.map(c => [c.id, c]));

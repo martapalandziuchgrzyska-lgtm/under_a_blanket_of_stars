@@ -1,5 +1,5 @@
 // Stan gry, zapis i reguły (ciemność, pogoda, prośby sąsiadów).
-import { OBJ, NEIGHBORS, NB, seasonObjects, NIGHTS_PER_SEASON, BLOCKS, FORECAST_W, EVENTS, FEATS, phaseOf, brightMoon, moonIndex, TALKS } from './data.js';
+import { OBJ, NEIGHBORS, NB, seasonObjects, NIGHTS_PER_SEASON, BLOCKS, FORECAST_W, EVENTS, FEATS, phaseOf, brightMoon, moonIndex, TALKS, CONS } from './data.js';
 
 const KEY = 'pod_kocem_gwiazd_v1';
 export let S = null;
@@ -8,11 +8,11 @@ export function hasSave() { try { return !!localStorage.getItem(KEY); } catch { 
 export function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* tryb prywatny */ } }
 export function load() {
   try { S = JSON.parse(localStorage.getItem(KEY)); } catch { S = null; }
-  if (!S || S.v !== 3) newGame();
+  if (!S || S.v !== 5) newGame();
   return S;
 }
 export function newGame() {
-  S = { v: 3, night: 0, obj: {}, nb: {}, lamps: true, feats: {}, gifts: [false, false, false, false], inbox: [], cur: null, intro: false, toasts: [] };
+  S = { v: 5, night: 0, obj: {}, nb: {}, cons: {}, wishes: 0, lamps: false, feats: {}, gifts: [false, false, false, false], inbox: [], cur: null, intro: false, toasts: [] };
   for (const n of NEIGHBORS) S.nb[n.id] = { met: false, rel: 0, req: null, off: false, asks: 0, sent: [], talks: 0 };
   save();
 }
@@ -36,7 +36,7 @@ export function darkness(b = S.cur ? S.cur.b : 0) {
   let d = 2 + lightsOff();
   if (S.lamps) d -= 1;
   if (isFullMoon() && !eclipseNow(b)) d -= 1;
-  return Math.max(1, d);
+  return Math.max(1, d) + (S.cur && S.cur.dark && S.cur.dark[b] ? 1 : 0); // życzenie: ciemniej o 1 w tej godzinie
 }
 
 export function feat(id) {
@@ -63,10 +63,16 @@ export function startNight() {
   }
   // nowa pora roku: prośby o obiekty, których już nie widać, wracają do sąsiadów (napiszą o coś innego)
   for (const n of NEIGHBORS) { const st = S.nb[n.id]; if (st.req && OBJ[st.req].s !== season() && !(ost(st.req).album && ost(st.req).album.pasted)) st.req = null; }
+  // po dwóch pochmurnych godzinach z rzędu trzecia jest czysta albo najwyżej z cienką chmurą
+  for (let i = 2; i < BLOCKS; i++) if (act[i - 1] === 'cloud' && act[i - 2] === 'cloud' && act[i] === 'cloud') {
+    act[i] = Math.random() < 0.6 ? 'clear' : 'thin';
+    if (fore[i] === 'likely') fore[i] = 'maybe';
+    if (early[i] === 'likely') early[i] = 'maybe';
+  }
   if (S.night === 0) { fore[0] = early[0] = act[0] = 'clear'; fore[1] = 'clear'; act[1] = 'clear'; }
   S.cur = {
     fore, early, act, b: 0, plan: Array(BLOCKS).fill(null), res: Array(BLOCKS).fill(null),
-    avail: season() === 1 ? 6 : BLOCKS, tea: false, dog: false, mail: false, done: false, got: 0, talked: {},
+    avail: season() === 1 ? 6 : BLOCKS, tea: false, dog: false, mail: false, done: false, got: 0, talked: {}, caught: 0, extra: false, calib: false, dark: {},
   };
   save();
 }
@@ -78,10 +84,10 @@ export function blocked(id, b) {
   if (id === 'moon' && !moonPhase()) return 'nów, Księżyca nie widać';
   if (!ost(id).found) return 'nieodkryty, przeskanuj niebo';
   if (ost(id).p >= maxP(id)) return 'masz już komplet światła';
-  if (o.win && (b + 1 < o.win[0] || b + 1 > o.win[1])) return b + 1 < o.win[0] ? `za dachem do bloku ${o.win[0]}` : 'już zaszedł';
+  if (o.win && (b + 1 < o.win[0] || b + 1 > o.win[1])) return b + 1 < o.win[0] ? `za dachem do godziny ${o.win[0]}` : 'już zaszedł';
   if (twilight(b) && o.lvl > 1) return 'za jasno (zmierzch)';
   if (o.noMoon && isFullMoon()) return 'pełnia go zagłusza';
-  if (o.lvl > darkness(b)) return `za jasno (trzeba ciemności ${o.lvl})`;
+  if (o.lvl > darkness(b)) return `za jasno na zdjęcie (trzeba ciemności ${o.lvl})`;
   return null;
 }
 // Światło układa się w progi: b bloków = 1 gwiazdka, 2b = 2, 3b = 3 (komplet).
@@ -104,13 +110,15 @@ export function runBlock() {
       const gb = S.night * BLOCKS + b;
       if (st.p === 0) st.streak = true; else if (st.lastB !== gb - 1 || Math.floor(st.lastB / BLOCKS) !== S.night) st.streak = false;
       st.lastB = gb;
-      const before = tier(id), gain = darkness(b) >= o.lvl + 3 ? 2 : 1; // bardzo ciemne niebo: podwójne światło
+      const before = tier(id), gain = (darkness(b) >= o.lvl + 3 ? 2 : 1) * (c.calib ? 2 : 1) + (c.extra ? 1 : 0); // ciemne niebo x2, kalibracja x2, herbata +1
+      const buffs = [c.calib && 'kalibracja ×2', c.extra && 'herbata +1'].filter(Boolean);
+      c.extra = false; c.calib = false;
       if (st.p < o.b && st.p + gain >= o.b) st.gold = st.streak && o.b > 1;
       st.p = Math.min(maxP(id), st.p + gain);
       if (id === 'moon' && moonPhase()) feat(moonPhase().id);
       const lucky = c.fore[b] === 'likely' && act === 'clear' && o.lvl > 1;
       if (lucky) feat('lucky');
-      r = { kind: 'ok', id, act, lucky, gain, ready: tier(id) > before && canDevelop(id) };
+      r = { kind: 'ok', id, b, act, lucky, gain, buffs, ready: tier(id) > before && canDevelop(id) };
     } else { r = { kind: 'cloud', id, act }; if (st.p > 0) st.streak = false; }
   }
   c.res[b] = r.kind === 'ok' || r.kind === 'event' ? 'ok' : r.kind === 'rest' ? 'rest' : 'cloud';
@@ -128,11 +136,43 @@ export function devBlockDone() {
   save();
 }
 // ---------- skanowanie nieba: namierzanie nieodkrytych obiektów
-export const scanCandidates = b => seasonObjects(season()).filter(o => !ost(o.id).found && o.lvl <= darkness(b));
+// Namierzyć da się też to, na co jest jeszcze za jasno (do poziomu 3): gracz poznaje cele, zanim może je fotografować.
+export const scanCandidates = b => seasonObjects(season()).filter(o => !ost(o.id).found && o.lvl <= Math.max(3, darkness(b)));
 function closeBlock(res) { const c = S.cur; c.res[c.b] = res; c.b++; if (c.b >= c.avail) c.done = true; save(); }
 export function scanDone(id) { ost(id).found = true; if (S.cur && !S.cur.done) closeBlock('ok'); else save(); }
 export function scanClouded() { closeBlock('cloud'); }
-export function perfectNight() { return S.cur.avail === BLOCKS && S.cur.res.every(x => x === 'ok'); }
+// ---------- Mapa Nieba w albumie
+// Wzór odblokowuje zdjęcie dowolnego obiektu z tego gwiazdozbioru; łączenie nie zajmuje godziny.
+export const conUnlocked = c => c.members.some(id => { const a = ost(id).album; return a && a.pasted; });
+export function consDone(id) { S.cons[id] = true; save(); }
+
+// ---------- czynności na tarasie (po godzinie każda)
+export function teaBlock() { S.cur.extra = true; closeBlock('ok'); }     // następne zbieranie: +1 światło
+export function calibBlock() { S.cur.calib = true; closeBlock('ok'); }   // następne udane zbieranie: podwójnie
+
+// ---------- odłamki życzeń: łapane ze spadających gwiazd (najwyżej 2 na noc, 5 w zapasie)
+export const WISH_MAX = 5;
+export function catchStar() {
+  const c = S.cur;
+  if (c.caught >= 2 || S.wishes >= WISH_MAX) return false;
+  c.caught++; S.wishes++; feat('wish'); save();
+  return true;
+}
+// 'clear': rozgania chmury w godzinie i; 'dark': niebo ciemniejsze o 1 w godzinie i; 'extend': noc dłuższa o godzinę
+export function useWish(kind, i) {
+  const c = S.cur;
+  if (S.wishes <= 0) return false;
+  if (kind === 'clear') { c.act[i] = 'clear'; c.fore[i] = 'clear'; c.early[i] = 'clear'; }
+  else if (kind === 'dark') c.dark[i] = 1;
+  else if (kind === 'extend') {
+    if (c.plan.length > BLOCKS && c.avail >= c.plan.length) return false; // najwyżej jedna dodatkowa godzina
+    if (c.avail >= c.plan.length) { c.fore.push('maybe'); c.early.push('maybe'); c.act.push(Math.random() < 0.7 ? 'clear' : 'thin'); c.plan.push(null); c.res.push(null); }
+    c.avail++; c.done = false;
+  }
+  S.wishes--; save();
+  return true;
+}
+export function perfectNight() { return S.cur.avail >= BLOCKS && S.cur.res.every(x => x === 'ok'); }
 export function endNight() { S.night++; S.cur = null; save(); }
 
 // ---------- liściki i prośby
@@ -148,26 +188,35 @@ function chooseRequest(n) {
   for (const t of tiers) { const c = pool.filter(t); if (c.length) return c[Math.floor(Math.random() * c.length)].id; }
   return null;
 }
+// Układa prośbę sąsiada i zwraca treść liściku (albo null, gdy nie ma o co prosić).
+function makeRequest(n) {
+  const st = S.nb[n.id];
+  if (S.night < n.from || st.req) return null;
+  const req = chooseRequest(n);
+  if (!req) return null;
+  let text = n.ask[st.asks % n.ask.length].replace('{o}', OBJ[req].name);
+  if (!st.met) { st.met = true; text = n.hello + '\n\n' + text; }
+  st.req = req; st.asks++;
+  return text;
+}
+// najpierw piszą ci, których znasz najsłabiej (nowi sąsiedzi nie czekają w kolejce)
+const byRel = () => [...NEIGHBORS].sort((a, b) => (S.nb[a.id].met ? S.nb[a.id].rel : -1) - (S.nb[b.id].met ? S.nb[b.id].rel : -1));
 // Kot wraca z liścikami: nowi sąsiedzi i nowe prośby. Zapalone lampki = jeden liścik więcej.
 export function deliverMail() {
   if (S.cur.mail) return 0;
   S.cur.mail = true;
   let left = S.lamps ? 3 : 2, n0 = S.inbox.length;
-  // najpierw piszą ci, których znasz najsłabiej (nowi sąsiedzi nie czekają w kolejce)
-  const order = [...NEIGHBORS].sort((a, b) => (S.nb[a.id].met ? S.nb[a.id].rel : -1) - (S.nb[b.id].met ? S.nb[b.id].rel : -1));
-  for (const n of order) {
-    const st = S.nb[n.id];
-    if (left <= 0 || S.night < n.from || st.req) continue;
-    const req = chooseRequest(n);
-    if (!req) continue;
-    let text = n.ask[st.asks % n.ask.length].replace('{o}', OBJ[req].name);
-    if (!st.met) { st.met = true; text = n.hello + '\n\n' + text; }
-    st.req = req; st.asks++; left--;
-    S.inbox.push({ from: n.id, text });
-  }
+  for (const n of byRel()) { if (left <= 0) break; const text = makeRequest(n); if (text) { S.inbox.push({ from: n.id, text }); left--; } }
   save();
   return S.inbox.length - n0;
 }
+// Sama piszesz do sąsiada: odpowiedź (nowa prośba) przychodzi od razu. Zwraca {from, text} albo null.
+export const canWrite = () => NEIGHBORS.some(n => S.night >= n.from && !S.nb[n.id].req);
+export function writeNote() {
+  for (const n of byRel()) { const text = makeRequest(n); if (text) { save(); return { from: n.id, text }; } }
+  return null;
+}
+export function writeBlock() { const r = writeNote(); if (r) closeBlock('ok'); return r; }
 // +1 serce; przy 2 sąsiad gasi światło, przy 3 zaczyna wpadać na taras
 function bumpRel(nid) {
   const st = S.nb[nid], n = NB[nid];

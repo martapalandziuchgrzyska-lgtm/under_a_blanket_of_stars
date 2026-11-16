@@ -3,8 +3,10 @@ import Phaser from '../lib/phaser.esm.min.js';
 import { SEASONS, NIGHTS_PER_SEASON, DIARY } from './data.js';
 import { S, season, nightNo, year, moonPhase } from './state.js';
 import { W, H, setupCam, txt, button, SERIF } from './ui.js';
+import { sfx } from './audio.js';
 
 const ADD = Phaser.BlendModes.ADD;
+const O = H - 640; // scena była układana pod wysokość 640; wszystko poniżej nieba zjeżdża o O
 
 export class DawnScene extends Phaser.Scene {
   constructor() { super('Dawn'); }
@@ -18,23 +20,23 @@ export class DawnScene extends Phaser.Scene {
       [[0, '#2a2f7a'], [0.4, '#7a5a9e'], [0.7, '#e8875e'], [0.88, '#ffc88a'], [1, '#ffe9b8']].forEach(([p, c]) => g.addColorStop(p, c));
       t.context.fillStyle = g; t.context.fillRect(0, 0, 8, 240); t.refresh();
     }
-    this.add.image(0, 0, 'sky').setOrigin(0).setDisplaySize(W, 470);
-    const stars = ['stars3', 'stars2', 'stars1'].map(k => this.add.tileSprite(0, 0, W, 440, k).setOrigin(0));
-    const dawn = this.add.image(0, 0, 'dawn').setOrigin(0).setDisplaySize(W, 470).setAlpha(0);
-    const halo = this.add.image(250, 480, 'glow').setScale(11).setTint(0xffc65a).setAlpha(0).setBlendMode(ADD);
-    const sun = this.add.circle(250, 480, 24, 0xfff0c0);
-    this.add.image(0, 290, 'city').setOrigin(0).setAlpha(0.8);
-    this.add.image(-20, 320, 'houses').setOrigin(0);
-    this.add.image(0, 452, 'terrace').setOrigin(0);
-    this.add.image(36, 540, 'dog0').setOrigin(0);
-    this.add.image(120, 572, 'hero').setOrigin(0.5, 1);
-    this.add.image(176, 532, 'tripod').setOrigin(0); this.add.image(191, 536, 'tube').setOrigin(0.3, 0.5).setRotation(-0.6);
-    const cat = this.add.image(-20, 478, 'cat0').setOrigin(0.5, 1).setFlipX(true);
-    const warm = this.add.rectangle(W / 2, 540, W, 200, 0xffb070, 0).setBlendMode(ADD);
+    this.add.image(0, 0, 'sky').setOrigin(0).setDisplaySize(W, 470 + O);
+    const stars = ['stars3', 'stars2', 'stars1'].map(k => this.add.tileSprite(0, 0, W, 440 + O, k).setOrigin(0));
+    const dawn = this.add.image(0, 0, 'dawn').setOrigin(0).setDisplaySize(W, 470 + O).setAlpha(0);
+    const halo = this.add.image(250, 480 + O, 'glow').setScale(11).setTint(0xffc65a).setAlpha(0).setBlendMode(ADD);
+    const sun = this.add.circle(250, 480 + O, 24, 0xfff0c0);
+    this.add.image(0, 290 + O, 'city').setOrigin(0).setAlpha(0.8);
+    this.add.image(-20, 320 + O, 'houses').setOrigin(0);
+    this.add.image(0, 452 + O, 'terrace').setOrigin(0);
+    this.add.image(36, 540 + O, 'dog0').setOrigin(0);
+    this.add.image(120, 572 + O, 'hero').setOrigin(0.5, 1);
+    this.add.image(176, 532 + O, 'tripod').setOrigin(0); this.add.image(191, 536 + O, 'tube').setOrigin(0.3, 0.5).setRotation(-0.6);
+    const cat = this.add.image(-20, 478 + O, 'cat0').setOrigin(0.5, 1).setFlipX(true);
+    const warm = this.add.rectangle(W / 2, 540 + O, W, 200, 0xffb070, 0).setBlendMode(ADD);
 
     this.tweens.add({ targets: dawn, alpha: 1, duration: 3200, ease: 'Sine.easeInOut' });
     this.tweens.add({ targets: stars, alpha: 0, duration: 2400 });
-    this.tweens.add({ targets: [sun, halo], y: 392, duration: 3800, ease: 'Sine.easeOut' });
+    this.tweens.add({ targets: [sun, halo], y: 392 + O, duration: 3800, ease: 'Sine.easeOut' });
     this.tweens.add({ targets: halo, alpha: 0.55, duration: 3000 });
     this.tweens.add({ targets: warm, fillAlpha: 0.16, duration: 3500 });
     this.tweens.add({ targets: cat, x: W + 20, duration: 9000 });
@@ -42,6 +44,7 @@ export class DawnScene extends Phaser.Scene {
     // klucz ptaków
     const birds = this.add.container(-40, 200);
     [[0, 0], [-14, 8], [-12, -9], [-28, 15], [-25, -17]].forEach(([x, y]) => { const b = this.add.graphics(); b.lineStyle(1.5, 0x2a2440, 0.9); b.beginPath(); b.moveTo(x - 4, y - 2); b.lineTo(x, y); b.lineTo(x - 4, y + 2); b.strokePath(); birds.add(b); });
+    this.time.delayedCall(1200, () => sfx('birds'));
     this.tweens.add({ targets: birds, x: W + 60, y: 150, duration: 7000, delay: 900 });
 
     txt(this, W / 2, 26, `Świt po nocy ${n + 1}`, { size: 12, ox: 0.5, color: '#d8dcf0' });

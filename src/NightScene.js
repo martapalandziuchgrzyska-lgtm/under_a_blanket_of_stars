@@ -100,7 +100,7 @@ export class NightScene extends Phaser.Scene {
     const c = S.cur;
     this.hudL.setText(`${SEASONS[season()]} · noc ${nightNo() + 1}/${NIGHTS_PER_SEASON}`);
     const d = darkness(Math.min(c.b, BLOCKS - 1));
-    this.hudR.setText(`ciemność ${'●'.repeat(Math.min(7, d))}${'○'.repeat(Math.max(0, 7 - d))}` + (S.lamps ? '\nlampki −1' : '') + (isFullMoon() && !eclipseNow(c.b) ? '\njasny Księżyc −1' : ''));
+    this.hudR.setText(`ciemność ${'●'.repeat(Math.min(7, d))}${'○'.repeat(Math.max(0, 7 - d))}` + (isFullMoon() && !eclipseNow(c.b) ? '\njasny Księżyc −1' : ''));
     this.slots.forEach((s, i) => {
       const past = i < c.b, cur = i === c.b && !c.done, locked = i >= c.avail, id = c.plan[i], pi = this.planInfo(id);
       s.fore.setTexture('w_' + (past ? { clear: 'clear', thin: 'maybe', cloud: 'likely' }[c.act[i]] : shownForecast(i))).setAlpha(locked ? 0.15 : past ? 0.35 : i <= c.b + 1 ? 1 : 0.6);
@@ -212,7 +212,7 @@ export class NightScene extends Phaser.Scene {
     }
     const why = blocked(id, c.b);
     if (!ost(id).found) return this.say('Coś tam majaczy, ale nie wiesz co. Zaplanuj „Skanuj niebo”, żeby to namierzyć.');
-    if (why && why.startsWith('za jasno')) return this.say(`${o.name}: za jasno na zdjęcie. Musisz przekonać sąsiada do zgaszenia światła` + (S.lamps ? ' albo zgasić lampki.' : '.') + (S.wishes ? ' Odłamek życzenia przyciemni niebo na godzinę.' : ''));
+    if (why && why.startsWith('za jasno')) return this.say(`${o.name}: za jasno na zdjęcie. Musisz przekonać sąsiada do zgaszenia światła.` + (S.wishes ? ' Odłamek życzenia przyciemni niebo na godzinę.' : ''));
     if (why) return this.say(`${o.name}: ${why}.`);
     this.assign(c.b, id); this.render(); this.world.setTarget(id);
     this.say(`Teleskop patrzy na: ${o.name}.\n${o.note}`);
@@ -275,8 +275,7 @@ export class NightScene extends Phaser.Scene {
     if (pid === 'send') {
       const out = sendBlock(); sfx('meow');
       let body = out.map(x => `${OBJ[x.obj].short} → ${NB[x.nb].name} (♥ ${S.nb[x.nb].rel})`).join('\n');
-      for (const x of out) if (x.ev === 'off') body += `\n\n${NB[x.nb].name} gasi ${NB[x.nb].light}. Niebo ciemnieje.`; else if (x.ev === 'guest') body += `\n\n${NB[x.nb].name} zacznie wpadać na taras, gdy palą się lampki.`;
-      if (out.some(x => x.ev === 'off') && S.lamps) body += '\n\nTwoje lampki też świecą: stuknij girlandę, żeby je zgasić.';
+      for (const x of out) if (x.ev === 'off') body += `\n\n${NB[x.nb].name} gasi ${NB[x.nb].light}. Niebo ciemnieje.`; else if (x.ev === 'guest') body += `\n\n${NB[x.nb].name} odpisze liścikiem od serca.`;
       this.say('Kot poszedł z przesyłką.'); this.world.catGo(); this.time.delayedCall(1800, () => this.world.catBack());
       return dialog(this, 'Zdjęcia w drodze', body || 'Nie było czego wysłać, ale kot i tak zrobił rundkę.', [{ label: 'Dobrze', cb: () => this.afterBlock() }]);
     }
@@ -303,7 +302,7 @@ export class NightScene extends Phaser.Scene {
       sfx(r.kind === 'ok' || r.kind === 'event' ? 'collect' : r.kind === 'rest' ? 'soft' : 'cloud');
       if (r.kind === 'ok') this.say(`+${r.gain} światło: ${o.short} (${ost(r.id).p}/${maxP(r.id)})` + (r.buffs.length ? ` · ${r.buffs.join(', ')}` : '') + (darkness(r.b) >= o.lvl + 3 ? '\nBardzo ciemne niebo: podwójne światło.' : '') + (r.lucky ? '\nZostałaś mimo prognozy i się rozchmurzyło!' : r.act === 'thin' ? '\nCienka chmura jasnym obiektom nie szkodzi.' : ''));
       else if (r.kind === 'cloud') this.say((r.act === 'thin' ? 'Cienka chmura: słabe światło przez nią nie przejdzie.' : 'Chmury zasłoniły niebo.') + (o ? '\nZebrany postęp zostaje.' : ''));
-      else if (r.kind === 'blocked') this.say(r.why.startsWith('za jasno') ? `${o.short}: za jasno na zdjęcie. Musisz przekonać sąsiada do zgaszenia światła (albo zgasić lampki).` : `${o.short}: ${r.why}. Godzina przepadła, postęp nie.`);
+      else if (r.kind === 'blocked') this.say(r.why.startsWith('za jasno') ? `${o.short}: za jasno na zdjęcie. Musisz przekonać sąsiada do zgaszenia światła.` : `${o.short}: ${r.why}. Godzina przepadła, postęp nie.`);
       else if (r.kind === 'event') this.say(r.id === 'comet' ? 'Kometa na zdjęciu. Na zawsze.' : r.id === 'phase' ? 'Księżyc w kadrze: nowa faza w albumie.' : 'Miedziany Księżyc złapany w kadr.');
       else this.say(REST_LINES[(S.night + b) % REST_LINES.length]);
       this.render();
@@ -364,7 +363,7 @@ export class NightScene extends Phaser.Scene {
   toggleLamps() {
     if (this.busy) return;
     S.lamps = !S.lamps; save(); this.render();
-    toast(this, S.lamps ? 'Lampki zapalone: przytulnie, kot nosi więcej liścików\ni wpadają goście, ale niebo jaśnieje o 1.' : 'Lampki zgaszone: niebo ciemniejsze o 1.', 190);
+    toast(this, S.lamps ? 'Lampki zapalone. Od razu przytulniej.' : 'Lampki zgaszone. Taras w samym świetle gwiazd.', 190);
   }
   warm(what) {
     const c = S.cur;
@@ -395,7 +394,7 @@ export class NightScene extends Phaser.Scene {
         ov.add(txt(this, 92, y + 17, OBJ[st.req].short, { size: 12 }));
         if (canSend(n.id)) ov.add(button(this, W - 62, y + 20, 92, 28, 'Zaplanuj wysyłkę', () => { ov.destroy(); if (!S.cur.done) { this.assign(S.cur.b, 'send'); this.say('Tę godzinę kot spędzi na roznoszeniu zdjęć. Stuknij „Zacznij godzinę”.'); } this.render(); }, { size: 10, fill: 0x8a3a56, stroke: 0xe88a9a }).c);
         else ov.add(txt(this, W - 18, y + 20, 'jeszcze nie\nw albumie', { size: 9, ox: 1, oy: 0.5, align: 'right', color: '#6a7498' }));
-      } else ov.add(txt(this, 58, y + 12, st.rel >= 3 ? 'Wpada czasem na taras, gdy palą się lampki. Można pogadać.' : 'Kot przyniesie kolejny liścik.', { size: 10, color: '#6a7498', wrap: 280 }));
+      } else ov.add(txt(this, 58, y + 12, 'Wpada na taras co drugą noc. Kot przyniesie kolejny liścik.', { size: 10, color: '#6a7498', wrap: 280 }));
     });
     ov.add(button(this, W / 2, H - 24, 140, 30, 'Zamknij', close).c);
   }

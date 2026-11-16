@@ -163,7 +163,7 @@ export class World {
     this.st[2].setAlpha(Math.max(0, Math.min(1, (d - 2) / 3)));
     this.milky.setAlpha(season() === 3 ? Math.max(0.1, Math.min(1, (d - 1) / 4)) : Math.max(0, Math.min(0.6, (d - 2) / 6)));
     this.cityw.setAlpha(Math.max(0.25, 1 - (raw - 2) / 6));
-    this.poll.setAlpha(Math.max(0.06, 1 - (raw - 2) / 5.2) * (S.lamps ? 1 : 0.85));
+    this.poll.setAlpha(Math.max(0.06, 1 - (raw - 2) / 5.2));
     for (const n of NEIGHBORS) for (const p of this.lights[n.id]) p.setVisible(!S.nb[n.id].off);
     const late = S.cur ? S.cur.b : 0;
     this.anon.forEach((w, i) => w.setVisible(i >= lightsOff() && late < 3 + i));

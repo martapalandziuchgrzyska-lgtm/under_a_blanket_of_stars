@@ -8,11 +8,13 @@ export function hasSave() { try { return !!localStorage.getItem(KEY); } catch { 
 export function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* tryb prywatny */ } }
 export function load() {
   try { S = JSON.parse(localStorage.getItem(KEY)); } catch { S = null; }
-  if (!S || S.v !== 5) newGame();
+  // v5 -> v6: pora roku ma 15 nocy zamiast 12; przeliczamy numer nocy, reszta postępu zostaje
+  if (S && S.v === 5) { S.night = Math.floor(S.night / 12) * 15 + S.night % 12; S.cur = null; S.v = 6; S.lamps = true; save(); }
+  if (!S || S.v !== 6) newGame();
   return S;
 }
 export function newGame() {
-  S = { v: 5, night: 0, obj: {}, nb: {}, cons: {}, wishes: 0, lamps: false, feats: {}, gifts: [false, false, false, false], inbox: [], cur: null, intro: false, toasts: [] };
+  S = { v: 6, night: 0, obj: {}, nb: {}, cons: {}, wishes: 0, lamps: true, feats: {}, gifts: [false, false, false, false], inbox: [], cur: null, intro: false, toasts: [] };
   for (const n of NEIGHBORS) S.nb[n.id] = { met: false, rel: 0, req: null, off: false, asks: 0, sent: [], talks: 0 };
   save();
 }
@@ -30,11 +32,10 @@ export const eventTonight = id => { const e = EVENTS[id]; return e.s === season(
 export const eclipseNow = b => eventTonight('eclipse') && EVENTS.eclipse.blocks.includes(b);
 export const twilight = b => season() === 3 && (b === 0 || b === BLOCKS - 1);
 
-// Ciemność nieba w danym bloku: 2 + zgaszone światła, minus lampki i jasny Księżyc.
+// Ciemność nieba w danej godzinie: 2 + zgaszone światła sąsiadów, minus pełnia. Lampki na tarasie nie mają wpływu.
 export function darkness(b = S.cur ? S.cur.b : 0) {
   if (twilight(b)) return 1;
   let d = 2 + lightsOff();
-  if (S.lamps) d -= 1;
   if (isFullMoon() && !eclipseNow(b)) d -= 1;
   return Math.max(1, d) + (S.cur && S.cur.dark && S.cur.dark[b] ? 1 : 0); // życzenie: ciemniej o 1 w tej godzinie
 }
@@ -201,11 +202,11 @@ function makeRequest(n) {
 }
 // najpierw piszą ci, których znasz najsłabiej (nowi sąsiedzi nie czekają w kolejce)
 const byRel = () => [...NEIGHBORS].sort((a, b) => (S.nb[a.id].met ? S.nb[a.id].rel : -1) - (S.nb[b.id].met ? S.nb[b.id].rel : -1));
-// Kot wraca z liścikami: nowi sąsiedzi i nowe prośby. Zapalone lampki = jeden liścik więcej.
+// Kot wraca z liścikami: nowi sąsiedzi i nowe prośby (najwyżej 2 na noc).
 export function deliverMail() {
   if (S.cur.mail) return 0;
   S.cur.mail = true;
-  let left = S.lamps ? 3 : 2, n0 = S.inbox.length;
+  let left = 2, n0 = S.inbox.length;
   for (const n of byRel()) { if (left <= 0) break; const text = makeRequest(n); if (text) { S.inbox.push({ from: n.id, text }); left--; } }
   save();
   return S.inbox.length - n0;
@@ -233,10 +234,10 @@ export function sendPhoto(nid) {
   save();
   return ev;
 }
-// Kto dziś siedzi na tarasie: w noce wydarzeń wszyscy znajomi, poza tym co drugą noc, gdy palą się lampki
+// Kto dziś siedzi na tarasie: w noce Perseidów i komety wszyscy znajomi, poza tym każdy znajomy co drugą noc
 export function guests() {
   const party = eventTonight('perseids') || eventTonight('comet');
-  return NEIGHBORS.filter((n, i) => (party ? S.nb[n.id].met : S.lamps && S.nb[n.id].rel >= 3 && (S.night + i) % 2 === 0)).map(n => n.id);
+  return NEIGHBORS.filter((n, i) => (S.nb[n.id].met && (party || (S.night + i) % 2 === 0))).map(n => n.id);
 }
 
 // ---------- bloki bez teleskopu: poczta, wysyłka zdjęć, rozmowa z gościem
@@ -251,7 +252,7 @@ export const canTalk = nid => guests().includes(nid) && !S.cur.talked[nid];
 export function talkBlock(nid) {
   const st = S.nb[nid], line = TALKS[nid][st.talks % TALKS[nid].length];
   st.talks++; S.cur.talked[nid] = true;
-  const ev = st.talks <= 4 ? bumpRel(nid) : null; // pierwsze rozmowy zbliżają
+  const ev = st.talks === 1 ? bumpRel(nid) : null; // pierwsza rozmowa daje serce; kolejne to już opowieści (światła gaszą zdjęcia)
   closeBlock('ok');
   return { line, ev };
 }

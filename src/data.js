@@ -1,7 +1,7 @@
 // Dane gry: obiekty, sąsiedzi, wydarzenia. Wszystko, co dotyczy balansu, jest tutaj.
 
 export const SEASONS = ['Jesień', 'Zima', 'Wiosna', 'Lato'];
-export const NIGHTS_PER_SEASON = 12;
+export const NIGHTS_PER_SEASON = 15;
 export const BLOCKS = 8;
 
 // typ obiektu -> etykieta i minigierka przy wywoływaniu
@@ -76,7 +76,7 @@ export const NEIGHBORS = [
     hello: 'Dzień dobry, nowa sąsiadko! Widzę z ganku, że co wieczór patrzysz w niebo. Mój mąż też tak siadywał.',
     ask: ['Zrobiłabyś dla mnie zdjęcie? Marzy mi się: {o}.', 'Kot znów był u mnie na mleku. A ja mam prośbę: {o}.', 'Stare oczy już nie te. Pokażesz mi, jak wygląda {o}?'],
     off: 'Zgasiłam lampę na ganku. I tak świeciła tylko ćmom, a Tobie będzie ciemniej.',
-    guest: 'Upiekłam szarlotkę. Mogę czasem wpaść na Twój taras, jak palą się lampki?',
+    guest: 'Upiekłam szarlotkę i odłożyłam dla Ciebie pół. Mój Stefan by Cię polubił.',
   },
   {
     id: 'kid', name: 'Antek', who: 'dzieciak z sąsiedniego domu', light: 'lampkę w oknie', from: 1,
@@ -84,7 +84,7 @@ export const NEIGHBORS = [
     hello: 'CZEŚĆ!!! To prawda, że masz PRAWDZIWY teleskop? Mama mówi, że mam nie przeszkadzać, więc piszę.',
     ask: ['Pokażesz mi {o}??? Proszę proszę proszę!', 'A da się zobaczyć {o}? W szkole mi nie wierzą.', 'Następne zamówienie: {o}! Powieszę nad łóżkiem.'],
     off: 'Już się nie boję ciemności, bo w ciemności widać planety. Gaszę lampkę!!!',
-    guest: 'Mama pozwoliła mi przyjść popatrzeć, jak zapalisz lampki. Przyniosę kakao!',
+    guest: 'Jesteś moją najlepszą sąsiadką. Nie mów kotu, ale on jest drugi.',
   },
   {
     id: 'gardener', name: 'Pan Ryszard', who: 'facet od ogrodu', light: 'reflektor z czujnikiem ruchu', from: 3,
@@ -92,23 +92,23 @@ export const NEIGHBORS = [
     hello: 'Sąsiadka wybaczy, ale w mieście nic na niebie nie widać. Wiem, bo patrzyłem. Raz.',
     ask: ['Dowód poproszę. Na przykład: {o}.', 'No dobrze, jedno się udało. A {o}? Tego na pewno nie widać.', 'Żona mówi, że mam przestać marudzić. To ostatni raz: {o}.'],
     off: 'Wykręciłem reflektor. Kuny i tak się go nie bały, a te zdjęcia są... no, niczego sobie.',
-    guest: 'Mam nadmiar pomidorów i składane krzesło. Wpadnę kiedyś, jak będzie się świeciło.',
+    guest: 'Zostawiłem pod płotem składane krzesło. Niech stoi u Ciebie, i tak wolę Twój taras od swojego ogrodu.',
   },
   {
-    id: 'student', name: 'Ola', who: 'studentka z poddasza', light: 'lampę biurkową', from: 12,
+    id: 'student', name: 'Ola', who: 'studentka z poddasza', light: 'lampę biurkową', from: 15,
     likes: ['nebula', 'galaxy'], color: '#e8a070', hair: '#3a2a4a',
     hello: 'Hej! Uczę się po nocach na poddaszu i widzę Twoją czerwoną latarkę. Fajnie wiedzieć, że ktoś jeszcze nie śpi.',
     ask: ['Potrzebuję tapety na sesję. Może {o}?', 'Zdałam kolokwium! W nagrodę chciałabym zobaczyć: {o}.', 'Znów zarywam noc. Podeślesz mi {o} na pocieszenie?'],
     off: 'Przeniosłam biurko od okna i kupiłam małą lampkę. Poddasze już Ci nie świeci w obiektyw!',
-    guest: 'Po sesji wpadnę z herbatą. Zapal lampki, to będę wiedziała, że można.',
+    guest: 'Dzięki, że jesteś. Sesja mniej straszna, jak wiem, że ktoś po drugiej stronie ulicy też nie śpi.',
   },
   {
-    id: 'couple', name: 'Ania i Jan', who: 'para z końca ulicy', light: 'girlandy na płocie', from: 24,
+    id: 'couple', name: 'Ania i Jan', who: 'para z końca ulicy', light: 'girlandy na płocie', from: 30,
     likes: ['nebula', 'galaxy', 'globular'], color: '#e87a8a', hair: '#c89a5a', pair: true,
     hello: 'Dobry wieczór! Mieszkamy na końcu ulicy, to nasze girlandy tak mrugają. Podobno robisz zdjęcia nieba?',
     ask: ['Zbliża się nasza rocznica. Szukamy czegoś ładnego, może {o}?', 'Ramka już wisi i czeka. Zmieściłoby się w niej: {o}?', 'Jan się założył, że tego się nie da sfotografować: {o}. Wygramy?'],
     off: 'Zdjęliśmy girlandy z płotu. Twoje zdjęcia świecą ładniej.',
-    guest: 'Mamy koc na dwoje i termos. Jak zapalisz lampki, przyjdziemy popatrzeć.',
+    guest: 'Twoje zdjęcie wisi u nas nad kanapą. Goście pytają, skąd mamy taki plakat.',
   },
 ];
 export const NB = Object.fromEntries(NEIGHBORS.map(n => [n.id, n]));
@@ -143,16 +143,16 @@ export const FORECAST_W = [[0.5, 0.3, 0.2], [0.45, 0.3, 0.25], [0.5, 0.3, 0.2], 
 
 // Wydarzenia: pora roku i noc (od 0)
 export const EVENTS = {
-  iss: { s: 0, nights: [2, 7] },
-  geminids: { s: 1, night: 8 },
-  eclipse: { s: 2, night: 5, blocks: [3, 4] },
-  perseids: { s: 3, night: 3 },
-  comet: { s: 3, night: 11 },
+  iss: { s: 0, nights: [2, 9] },
+  geminids: { s: 1, night: 10 },
+  eclipse: { s: 2, night: 6, blocks: [3, 4] }, // musi wypaść w pełnię
+  perseids: { s: 3, night: 4 },
+  comet: { s: 3, night: 14 },
 };
 
-// Fazy Księżyca: cykl trwa jedną porę roku (12 nocy), bez faz garbatych, żeby niebo rzadko było rozjaśnione.
+// Fazy Księżyca: cykl trwa jedną porę roku (15 nocy), bez faz garbatych, żeby niebo rzadko było rozjaśnione.
 // MOON_SEQ[noc] = numer tekstury (0 nów, 2 sierp, 3 pierwsza połowa, 6 pełnia, 9 druga połowa, 10 drugi sierp).
-export const MOON_SEQ = [2, 2, 3, 3, 3, 6, 9, 9, 9, 10, 10, 0];
+export const MOON_SEQ = [2, 2, 3, 3, 3, 3, 6, 9, 9, 9, 9, 10, 10, 0, 0];
 export const moonIndex = night => MOON_SEQ[night % MOON_SEQ.length];
 export const PHASES = [
   { id: 'ph_cres', name: 'Sierp', idx: 2 },
@@ -213,19 +213,19 @@ for (const o of OBJECTS) o.fact = FACTS[o.id] || '';
 
 // Rozmowy z gośćmi na tarasie (po kolei, przy kolejnych wizytach)
 export const TALKS = {
-  lady: ['Mój Stefan miał lunetę z mosiądzu. Sprzedałam ją po jego śmierci i żałuję do dziś. Dobrze, że ktoś tu znowu patrzy w górę.', 'Wiesz, że ta ulica nazywała się kiedyś Gwiezdna? Zmienili, bo listonosz mylił z Gwiaździstą.', 'Przyniosłam Ci słoik konfitur. Ten na płocie niech zostanie dla kota.', 'Jak byłam mała, podczas zaciemnienia widziałam Drogę Mleczną z samego rynku. Myślałam, że już jej nie zobaczę.'],
-  kid: ['A wiesz, że na Saturnie pada deszcz z diamentów? Pani mówi, że to tylko hipoteza. Co to hipoteza?', 'Jak dorosnę, będę astronautą. Albo kotem. Jeszcze nie wiem.', 'Narysowałem Twój taras. Pies wyszedł jak ziemniak, ale teleskop jest dobry.', 'Tata mówi, że kometa przyleci w wakacje. Mogę wtedy przyjść? Nawet jak będzie bardzo późno?'],
-  gardener: ['Te lampy z czujnikiem to żona kazała. Na złodziei. Jedyny, kogo złapały, to jeż.', 'Ogród nocą pachnie inaczej. Nie wiedziałem, bo zawsze świeciłem sobie w oczy.', 'Przyniosłem pomidory. Nie dziękuj, bo i tak nie mam co z nimi robić.', 'Pokazałem zdjęcie szwagrowi. Powiedział, że to z internetu. To mu powiedziałem, żeby przyjechał i sam zobaczył.'],
-  student: ['Studiuję fizykę, ale na wykładach nikt nie każe patrzeć w niebo. Trochę absurd.', 'Po sesji kupię lornetkę. Od czego zacząć? Tylko nie mów, że od Księżyca.', 'Czasem widzę z poddasza, jak machasz latarką do kota. On naprawdę wtedy wraca?', 'Napisałam o Twoich zdjęciach w pracy zaliczeniowej o zanieczyszczeniu światłem. Dostałam piątkę.'],
-  couple: ['Poznaliśmy się na obozie żeglarskim. Jan udawał, że zna gwiazdozbiory. Znał jeden.', 'Wielki Wóz. Znałem Wielki Wóz. I to wystarczyło.', 'Girlandy wiszą teraz w sypialni. Na płocie i tak mrugały tylko nam w okno.', 'Na rocznicę chcemy tu przyjść z termosem. Kometa byłaby miłym dodatkiem, ale nie wymagamy.'],
+  lady: ['Mój Stefan miał lunetę z mosiądzu. Sprzedałam ją po jego śmierci i żałuję do dziś. Dobrze, że ktoś tu znowu patrzy w górę.', 'Wiesz, że ta ulica nazywała się kiedyś Gwiezdna? Zmienili, bo listonosz mylił z Gwiaździstą.', 'Przyniosłam Ci słoik konfitur. Ten na płocie niech zostanie dla kota.', 'Jak byłam mała, podczas zaciemnienia widziałam Drogę Mleczną z samego rynku. Myślałam, że już jej nie zobaczę.', 'Na strychu mam jeszcze mapy nieba Stefana. Papier żółty, ale gwiazdy te same.', 'Kiedyś zimy były takie, że śnieg sięgał do parapetu. Dziś to i tak ładnie.', 'Twój kot przychodzi do mnie na drzemki. Myślałam, że Ci powiem, zanim się zdziwisz.'],
+  kid: ['A wiesz, że na Saturnie pada deszcz z diamentów? Pani mówi, że to tylko hipoteza. Co to hipoteza?', 'Jak dorosnę, będę astronautą. Albo kotem. Jeszcze nie wiem.', 'Narysowałem Twój taras. Pies wyszedł jak ziemniak, ale teleskop jest dobry.', 'Tata mówi, że kometa przyleci w wakacje. Mogę wtedy przyjść? Nawet jak będzie bardzo późno?', 'W szkole robiliśmy rakietę z butelki. Doleciała do okna dyrektora.', 'Czy kot widzi gwiazdy? Bo patrzy w górę jak ty.', 'Mama mówi, że jak będę grzeczny, to dostanę lornetkę. Liczę dni. Jest ich dużo.'],
+  gardener: ['Te lampy z czujnikiem to żona kazała. Na złodziei. Jedyny, kogo złapały, to jeż.', 'Ogród nocą pachnie inaczej. Nie wiedziałem, bo zawsze świeciłem sobie w oczy.', 'Przyniosłem pomidory. Nie dziękuj, bo i tak nie mam co z nimi robić.', 'Pokazałem zdjęcie szwagrowi. Powiedział, że to z internetu. To mu powiedziałem, żeby przyjechał i sam zobaczył.', 'Pomidory lepiej rosną, jak im nie świeci w nocy. Też się dziwiłem.', 'Żona pyta, czemu wracam od Ciebie tak późno. Mówię, że czekałem na chmurę.', 'Szwagier przyjechał. Zobaczył Saturna. Siedział cicho przez godzinę. Pierwszy raz.'],
+  student: ['Studiuję fizykę, ale na wykładach nikt nie każe patrzeć w niebo. Trochę absurd.', 'Po sesji kupię lornetkę. Od czego zacząć? Tylko nie mów, że od Księżyca.', 'Czasem widzę z poddasza, jak machasz latarką do kota. On naprawdę wtedy wraca?', 'Napisałam o Twoich zdjęciach w pracy zaliczeniowej o zanieczyszczeniu światłem. Dostałam piątkę.', 'Liczyłam dziś ze słuchaczami, ile gwiazd widać z miasta. Wyszło czternaście. U Ciebie więcej.', 'Mam teorię, że kot pracuje dla obu stron ulicy. Przynosi liściki tam i z powrotem i bierze prowizję w mleku.', 'Po studiach chcę pojechać na pustynię, gdzie w ogóle nie ma lamp. A potem wrócić tu.'],
+  couple: ['Poznaliśmy się na obozie żeglarskim. Jan udawał, że zna gwiazdozbiory. Znał jeden.', 'Wielki Wóz. Znałem Wielki Wóz. I to wystarczyło.', 'Girlandy wiszą teraz w sypialni. Na płocie i tak mrugały tylko nam w okno.', 'Na rocznicę chcemy tu przyjść z termosem. Kometa byłaby miłym dodatkiem, ale nie wymagamy.', 'Jan nauczył się drugiego gwiazdozbioru. Kasjopei. Pokazuje ją wszystkim jak dyplom.', 'Pierwszy taniec na weselu był do piosenki o gwiazdach. Nie powiemy, której, bo wstyd.', 'Myślimy o psie. Twój jest taki spokojny. Ten nasz byłby pewnie odwrotnie.'],
 };
 
-// Dziennik: jedno zdanie o świcie po każdej nocy (pora roku x noc)
+// Dziennik: jedno zdanie o świcie po każdej nocy (pora roku x noc, po 15 na porę)
 export const DIARY = [
-  ['Pierwsza noc w nowym domu. Kartony stoją nierozpakowane, ale teleskop już nie.', 'Ktoś z naprzeciwka pomachał mi rano z ganku. Odmachałam.', 'Kot wrócił z papierkiem przy obroży. Więc tak tu się rozmawia.', 'Okolica świeci jak lotnisko. Mimo to coś widać.', 'Pan od ogrodu twierdzi, że w mieście nic nie widać. Wyzwanie przyjęte.', 'Pierwszy raz ktoś zgasił dla mnie światło. Dziwne uczucie.', 'Liście lecą na taras. Pies uważa, że to jego zasługa.', 'W sklepie pani zapytała, czy to ja „od tych gwiazd”. Chyba tak.', 'Zimno w palce. Kupić rękawiczki bez palców.', 'Niebo jest o ton ciemniejsze niż we wrześniu. Albo mi się wydaje.', 'Kot śpi w kartonie po teleskopie. Pies udaje, że go nie widzi.', 'Koniec jesieni. Znam już trzy osoby i jednego jeża.'],
-  ['Pierwszy szron na poręczy. Koc ma teraz dwie warstwy.', 'Na poddaszu naprzeciwko do rana pali się lampa. Ktoś też nie śpi.', 'Herbata stygnie szybciej, niż ją piję.', 'Orion stoi nad dachami jak sąsiad, który przyszedł bez zaproszenia.', 'Pies ogrzewa mi stopy. Twierdzi, że to przypadek.', 'Śnieg odbija światło lamp. Ciekawe, czy dałoby się je zgasić wszystkie.', 'Na ulicy cisza taka, że słychać, jak mruga gwiazda.', 'Ktoś zostawił na progu rękawiczki bez palców. Bez liściku.', 'Spadające gwiazdy liczyliśmy we troje: ja, pies i termos.', 'Dni są krótkie, więc noce mam prawie dla siebie.', 'Kot przyniósł liścik z odciskiem łapy. Chyba własnej.', 'Koniec zimy. W kilku oknach jest już ciemno i wcale nie jest smutno.'],
-  ['Pachnie ziemią. Pan Ryszard kopie grządki o siódmej rano.', 'Pierwszy raz ktoś usiadł obok mnie na tarasie.', 'W sklepie mówią, że latem przyleci kometa.', 'Galaktyki są blade jak oddech na szybie. Trzeba cierpliwości.', 'Antek zapytał, czy gwiazdy się kończą. Powiedziałam, że nie wiem.', 'Dwie nowe osoby na końcu ulicy. Ich płot mruga kolorowo.', 'Księżyc zrobił się miedziany i przez chwilę było naprawdę ciemno.', 'Na tarasie stoi już więcej kubków niż moich.', 'Pies nauczył się, że goście oznaczają okruszki.', 'Ola przyniosła lornetkę. Krzyczała na Jowisza.', 'Kot i pies leżą metr od siebie. Postęp.', 'Koniec wiosny. O komecie mówi już cała ulica.'],
-  ['Noce są krótkie i ciepłe. Koc bardziej dla zasady.', 'Droga Mleczna stoi nad tarasem. Rok temu nie było jej widać.', 'Pani Helena przyniosła szarlotkę i krzesło. Zostaje.', 'Leżaki sąsiadów stoją u mnie na stałe. Niech stoją.', 'Świerszcze. Tyle świerszczy.', 'Ktoś zapytał, czy mogą zgasić latarnię na rogu. Podobno się da.', 'Antek zasnął na leżaku z lornetką na brzuchu.', 'Pan Ryszard mówi, że niebo jest „niczego sobie”. To u niego owacja.', 'Kometę widać już w lornetce. Mały kłębek.', 'Wszyscy pytają, o której przyjść. Mówię: jak zrobi się ciemno.', 'Jutro. Upiekłam ciasto, pierwszy raz w tym domu.', 'Rok temu nie znałam tu nikogo.'],
+  ['Pierwsza noc w nowym domu. Kartony stoją nierozpakowane, ale teleskop już nie.', 'Ktoś z naprzeciwka pomachał mi rano z ganku. Odmachałam.', 'Kot wrócił z papierkiem przy obroży. Więc tak tu się rozmawia.', 'Okolica świeci jak lotnisko. Mimo to coś widać.', 'Pan od ogrodu twierdzi, że w mieście nic nie widać. Wyzwanie przyjęte.', 'Pierwszy raz ktoś zgasił dla mnie światło. Dziwne uczucie.', 'Liście lecą na taras. Pies uważa, że to jego zasługa.', 'W sklepie pani zapytała, czy to ja „od tych gwiazd”. Chyba tak.', 'Kupiłam drugi koc. Ten pierwszy zajął pies.', 'Ktoś na ulicy powiedział „dobry wieczór, pani astronom”. Nie poprawiałam.', 'Na płocie przybyło słoików. Kot chyba otworzył pocztę.', 'Zimno w palce. Kupić rękawiczki bez palców.', 'Niebo jest o ton ciemniejsze niż we wrześniu. Albo mi się wydaje.', 'Kot śpi w kartonie po teleskopie. Pies udaje, że go nie widzi.', 'Koniec jesieni. Znam już trzy osoby i jednego jeża.'],
+  ['Pierwszy szron na poręczy. Koc ma teraz dwie warstwy.', 'Na poddaszu naprzeciwko do rana pali się lampa. Ktoś też nie śpi.', 'Herbata stygnie szybciej, niż ją piję.', 'Orion stoi nad dachami jak sąsiad, który przyszedł bez zaproszenia.', 'Pies ogrzewa mi stopy. Twierdzi, że to przypadek.', 'Śnieg odbija światło lamp. Ciekawe, czy dałoby się je zgasić wszystkie.', 'Na ulicy cisza taka, że słychać, jak mruga gwiazda.', 'Ktoś zostawił na progu rękawiczki bez palców. Bez liściku.', 'Para z oddechu zasłania okular. Uczę się oddychać w bok.', 'Kot przyniósł gałązkę jemioły. Nie wiem, od kogo.', 'W dziennikach astronomów z dawnych lat też jest dużo o zimnie. Dobrze wiedzieć.', 'Spadające gwiazdy liczyliśmy we troje: ja, pies i termos.', 'Dni są krótkie, więc noce mam prawie dla siebie.', 'Kot przyniósł liścik z odciskiem łapy. Chyba własnej.', 'Koniec zimy. W kilku oknach jest już ciemno i wcale nie jest smutno.'],
+  ['Pachnie ziemią. Pan Ryszard kopie grządki o siódmej rano.', 'Pierwszy raz ktoś usiadł obok mnie na tarasie.', 'W sklepie mówią, że latem przyleci kometa.', 'Galaktyki są blade jak oddech na szybie. Trzeba cierpliwości.', 'Antek zapytał, czy gwiazdy się kończą. Powiedziałam, że nie wiem.', 'Dwie nowe osoby na końcu ulicy. Ich płot mruga kolorowo.', 'Księżyc zrobił się miedziany i przez chwilę było naprawdę ciemno.', 'Na tarasie stoi już więcej kubków niż moich.', 'Kwitną czereśnie u pana Ryszarda. Nocą pachną jeszcze mocniej.', 'Pies nauczył się czekać na kota przy płocie. Udaje, że nie czeka.', 'Pierwsza noc bez szalika. Tylko koc, dla zasady.', 'Pies nauczył się, że goście oznaczają okruszki.', 'Ola przyniosła lornetkę. Krzyczała na Jowisza.', 'Kot i pies leżą metr od siebie. Postęp.', 'Koniec wiosny. O komecie mówi już cała ulica.'],
+  ['Noce są krótkie i ciepłe. Koc bardziej dla zasady.', 'Droga Mleczna stoi nad tarasem. Rok temu nie było jej widać.', 'Pani Helena przyniosła szarlotkę i krzesło. Zostaje.', 'Leżaki sąsiadów stoją u mnie na stałe. Niech stoją.', 'Świerszcze. Tyle świerszczy.', 'Ktoś zapytał, czy mogą zgasić latarnię na rogu. Podobno się da.', 'Antek zasnął na leżaku z lornetką na brzuchu.', 'Pan Ryszard mówi, że niebo jest „niczego sobie”. To u niego owacja.', 'Ktoś przyniósł lampion na komary. Nie działa, ale ładnie świeci.', 'Antek pyta, czy kometa ma imię. Ma, ale on woli swoje: Ogon.', 'Sąsiedzi umówili się, że w noc komety wyłączą wszystko. Nawet lodówki, mówi pan Ryszard.', 'Kometę widać już w lornetce. Mały kłębek.', 'Wszyscy pytają, o której przyjść. Mówię: jak zrobi się ciemno.', 'Jutro. Upiekłam ciasto, pierwszy raz w tym domu.', 'Rok temu nie znałam tu nikogo.'],
 ];
 
 // Gwiazdozbiory do połączenia w albumie (minigierka), po trzy na porę roku. Punkty w dowolnej skali.

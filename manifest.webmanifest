@@ -1,0 +1,14 @@
+{
+  "name": "Under a Blanket of Stars",
+  "short_name": "Blanket of Stars",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#070a18",
+  "theme_color": "#0b1026",
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "assets/icon-1024.png", "sizes": "1024x1024", "type": "image/png" }
+  ]
+}

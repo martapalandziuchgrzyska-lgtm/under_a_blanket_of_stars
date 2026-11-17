@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>Logo i ikonka</title>
+<style>html, body { margin: 0; background: #070818; overflow: hidden; } canvas { display: block; image-rendering: pixelated; }</style>
+</head>
+<body>
+<script type="module">
+// Rysuje logo albo ikonkę z tej samej grafiki co gra (src/art.js) i powiększa ją bez rozmywania.
+// ?what=logo|icon  &px=<rozmiar wyjściowy>  &smooth=1 (płynne zmniejszanie, dla favicon)
+// Eksport: tools/make_icons.sh robi zrzuty tej strony headless Chrome'em.
+import { buildWorld, drawTitle } from '../src/art.js';
+
+const q = new URLSearchParams(location.search), what = q.get('what') || 'logo';
+const tex = {};
+const scene = { textures: {
+  exists: k => k in tex, remove: k => delete tex[k],
+  createCanvas: (k, w, h) => { const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h; return (tex[k] = { canvas, context: canvas.getContext('2d'), refresh() {} }); },
+} };
+buildWorld(scene);
+const T = k => tex[k].canvas;
+
+const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+// ciepła poświata z ditheringiem (bez miękkich gradientów, żeby zostać w pikselach)
+function glowDither(c, cx, cy, rx, ry, col, strength) {
+  c.fillStyle = col;
+  for (let y = Math.floor(cy - ry); y <= cy + ry; y++) for (let x = Math.floor(cx - rx); x <= cx + rx; x++) {
+    const d = ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2;
+    if (d < 1 && (BAYER[(x & 3) + ((y & 3) << 2)] + 0.5) / 16 < (1 - d) * strength) c.fillRect(x, y, 1, 1);
+  }
+}
+function lamps(c, x0, x1, top, sag, step) {
+  c.fillStyle = '#241c36';
+  for (let x = x0; x <= x1; x++) { const t = (x - x0) / (x1 - x0); c.fillRect(x, Math.round(top + sag * 4 * t * (1 - t)), 1, 1); }
+  for (let x = x0 + step / 2; x < x1; x += step) {
+    const t = (x - x0) / (x1 - x0), y = Math.round(top + sag * 4 * t * (1 - t)) + 3;
+    glowDither(c, x, y + 1, 8, 8, 'rgba(255,190,90,0.55)', 0.75);
+    c.fillStyle = '#ffd070'; c.fillRect(x - 1, y - 1, 4, 4); c.fillStyle = '#fff4d0'; c.fillRect(x, y, 2, 2);
+  }
+}
+
+function logo() {
+  const S = 360, cv = document.createElement('canvas'); cv.width = cv.height = S;
+  const c = cv.getContext('2d');
+  c.drawImage(T('sky'), 0, 120, 360, 360, 0, 0, S, S);
+  c.globalAlpha = 0.75; c.drawImage(T('milky'), 230, 60, 360, 360, 0, 0, S, S); c.globalAlpha = 1;
+  for (const k of ['stars3', 'stars2', 'stars1']) c.drawImage(T(k), 40, 20, 360, 360, 0, 0, S, S);
+  // słupki z girlandą lampek
+  c.fillStyle = '#1c1428'; c.fillRect(8, 0, 4, 300); c.fillRect(348, 0, 4, 300);
+  c.fillStyle = '#2e2028'; c.fillRect(9, 0, 1, 300); c.fillRect(349, 0, 1, 300);
+  lamps(c, 10, 350, 6, 26, 26);
+  c.save(); c.translate(0, 50); drawTitle(c, S); c.restore(); // napis pod girlandą
+  // taras: deski i ciepła plama światła pod bohaterką
+  c.drawImage(T('terrace'), 0, 28, 360, 70, 0, 300, 360, 70);
+  glowDither(c, 180, 304, 92, 22, 'rgba(255,170,100,0.45)', 0.7);
+  glowDither(c, 180, 250, 70, 70, 'rgba(255,190,120,0.18)', 0.45);
+  c.drawImage(T('hero'), 148, 240);
+  c.drawImage(T('cat2'), 84, 291);
+  c.drawImage(T('dog0'), 228, 287);
+  return cv;
+}
+
+function icon() {
+  const S = 128, cv = document.createElement('canvas'); cv.width = cv.height = S;
+  const c = cv.getContext('2d');
+  c.drawImage(T('sky'), 110, 230, 128, 128, 0, 0, S, S);
+  c.globalAlpha = 0.6; c.drawImage(T('milky'), 330, 120, 128, 128, 0, 0, S, S); c.globalAlpha = 1;
+  for (const k of ['stars3', 'stars2']) c.drawImage(T(k), 200, 60, 128, 128, 0, 0, S, S);
+  c.drawImage(T('moon2'), 92, 8);
+  lamps(c, -6, 134, 2, 14, 20);
+  // jedna duża gwiazdka
+  c.fillStyle = '#ffe9a8'; c.fillRect(22, 40, 2, 12); c.fillRect(17, 45, 12, 2); c.fillStyle = '#ffffff'; c.fillRect(22, 45, 2, 2);
+  c.drawImage(T('terrace'), 0, 28, 128, 16, 0, 114, 128, 16);
+  glowDither(c, 64, 116, 44, 10, 'rgba(255,170,100,0.45)', 0.7);
+  c.drawImage(T('hero'), 32, 52);
+  return cv;
+}
+
+const src = what === 'icon' ? icon() : logo();
+const px = +(q.get('px') || src.width * 3);
+const out = document.createElement('canvas'); out.width = out.height = px;
+const o = out.getContext('2d');
+o.imageSmoothingEnabled = q.get('smooth') === '1';
+o.imageSmoothingQuality = 'high';
+o.drawImage(src, 0, 0, px, px);
+out.style.width = out.style.height = px + 'px';
+document.body.appendChild(out);
+document.title = 'gotowe';
+</script>
+</body>
+</html>

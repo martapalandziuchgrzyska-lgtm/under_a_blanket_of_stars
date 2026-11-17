@@ -21,9 +21,10 @@ class TitleScene extends Phaser.Scene {
     load();
     const world = new World(this);
     world.garland.setTexture('garland_on'); world.twinkle.setVisible(true); world.lampGlow.setVisible(true); // na ekranie tytułowym lampki zawsze świecą
+    world.objs.setVisible(false); // obiekty nieba nie wchodzą w napis
     this.add.rectangle(W / 2, (PY + H) / 2, W, H - PY, 0x0b1026);
     this.add.rectangle(W / 2, PY, W, 2, 0x4a3238);
-    txt(this, W / 2, 70, 'Under a Blanket\nof Stars', { size: 32, ox: 0.5, style: '800', color: '#ffe9a8', align: 'center', ls: -2 });
+    this.add.image(W / 2, 64, 'title').setOrigin(0.5, 0); // pikselowy napis z art.js
     const mute = button(this, W - 40, H - 22, 64, 26, isMuted() ? '♪ wył.' : '♪ wł.', () => { toggleMute(); mute.setLabel(isMuted() ? '♪ wył.' : '♪ wł.'); }, { size: 11, fill: 0x1b2650 });
     const started = had && (S.night > 0 || S.intro);
     button(this, W / 2, PY + 54, 220, 44, started ? `Kontynuuj (${SEASONS[season()]}, noc ${nightNo() + 1})` : 'Wyjdź na taras', () => this.scene.start('Night'), { fill: 0x8a3a56, stroke: 0xe88a9a, size: 14 });

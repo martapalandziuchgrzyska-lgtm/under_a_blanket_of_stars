@@ -213,6 +213,53 @@ function sparkle(c, x, y, n, col = '#ffffff') {
 }
 const W0 = '#2a1826', W1 = '#4a2c38', W2 = '#6e4240', W3 = '#96654c', W4 = '#c08a5a', INK = '#070818';
 
+// ---------- pikselowy napis tytułu (ekran tytułowy, logo, ikonki)
+// Font 5x7: każdy „piksel” litery to kwadrat b x b.
+const GLYPH = {
+  U: ['#...#', '#...#', '#...#', '#...#', '#...#', '#...#', '.###.'],
+  N: ['#...#', '##..#', '#.#.#', '#.#.#', '#..##', '#...#', '#...#'],
+  D: ['####.', '#...#', '#...#', '#...#', '#...#', '#...#', '####.'],
+  E: ['#####', '#....', '#....', '####.', '#....', '#....', '#####'],
+  R: ['####.', '#...#', '#...#', '####.', '#.#..', '#..#.', '#...#'],
+  A: ['.###.', '#...#', '#...#', '#####', '#...#', '#...#', '#...#'],
+  B: ['####.', '#...#', '#...#', '####.', '#...#', '#...#', '####.'],
+  L: ['#....', '#....', '#....', '#....', '#....', '#....', '#####'],
+  K: ['#...#', '#..#.', '#.#..', '##...', '#.#..', '#..#.', '#...#'],
+  T: ['#####', '..#..', '..#..', '..#..', '..#..', '..#..', '..#..'],
+  O: ['.###.', '#...#', '#...#', '#...#', '#...#', '#...#', '.###.'],
+  F: ['#####', '#....', '#....', '####.', '#....', '#....', '#....'],
+  S: ['.####', '#....', '#....', '.###.', '....#', '....#', '####.'],
+};
+const LAV = ['#eef0ff', '#d8dcff', '#c8ccff', '#c8ccff', '#b8bcf4', '#a8acec', '#9498dc'];
+const BLANK = ['#f0a888', '#fbe6c4', '#e8957a', '#dc8670', '#fbe6c4', '#c8705e', '#a85a50'];
+const GOLD = ['#fffbe0', '#fff0a8', '#ffe07c', '#ffcc5a', '#f8b44a', '#ec9c3c', '#d47e2e'];
+export const textWidth = (str, b) => [...str].reduce((w, ch) => w + (ch === ' ' ? 3 * b : 5 * b) + b, -b);
+// Rysuje napis: cień, ciemny obrys, potem litery z kolorem zależnym od rzędu (paski koca, złoto gwiazd).
+export function pixelText(c, str, x0, y0, b, rows, shadow = '#1a1238') {
+  const cells = [];
+  let x = x0;
+  for (const ch of str) {
+    if (ch === ' ') { x += 4 * b; continue; }
+    GLYPH[ch].forEach((row, j) => [...row].forEach((v, i) => { if (v === '#') cells.push([x + i * b, y0 + j * b, j]); }));
+    x += 6 * b;
+  }
+  const sh = Math.max(2, b >> 1);
+  for (const [cx, cy] of cells) R(c, shadow, cx + sh, cy + sh + 1, b, b);
+  for (const [cx, cy] of cells) R(c, '#0c0a24', cx - 1, cy - 1, b + 2, b + 2);
+  for (const [cx, cy, j] of cells) { R(c, rows[j], cx, cy, b, b); R(c, 'rgba(255,255,255,0.18)', cx, cy, b, 1); }
+}
+// Cały tytuł w trzech linijkach (jak na plakacie). Zwraca wysokość.
+export function drawTitle(c, w) {
+  const l1 = 'UNDER A', l2 = 'BLANKET', b1 = 4, b2 = 7;
+  pixelText(c, l1, Math.round((w - textWidth(l1, b1)) / 2), 2, b1, LAV);
+  pixelText(c, l2, Math.round((w - textWidth(l2, b2)) / 2), 40, b2, BLANK, '#3a1e30');
+  const of = textWidth('OF', b1), st = textWidth('STARS', b2), x3 = Math.round((w - of - 12 - st) / 2);
+  pixelText(c, 'OF', x3, 100 + 7 * b2 - 7 * b1, b1, LAV);
+  pixelText(c, 'STARS', x3 + of + 12, 100, b2, GOLD, '#3a2410');
+  sparkle(c, x3 + of + 12 + st + 6, 96, 4); sparkle(c, x3 + of + 2, 150, 3); sparkle(c, Math.round((w + textWidth(l2, b2)) / 2) + 8, 36, 2);
+  return 158;
+}
+
 export function buildWorld(scene) {
   // --- niebo
   mk(scene, 'sky', 360, 512, c => grad(c, 360, 512, ['#07081f', '#0a0b2a', '#0e0f38', '#141447', '#1b1958', '#251f6b', '#31267c', '#412c88', '#53338e'], 1.15));
@@ -262,6 +309,8 @@ export function buildWorld(scene) {
     }
   });
   mk(scene, 'glow', 32, 32, c => { for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) { const d = Math.hypot(x - 15.5, y - 15.5) / 16, a = Math.floor(Math.max(0, 1 - d) ** 2 * 6) / 6; if (a > 0) R(c, `rgba(255,255,255,${a})`, x, y); } });
+
+  mk(scene, 'title', 360, 162, c => drawTitle(c, 360));
 
   // --- domy sąsiadów (400 px = 200 jednostek, 10 jednostek zapasu z każdej strony na paralaksę)
   mk(scene, 'houses', 400, 140, c => {
